@@ -154,30 +154,17 @@ our $VERSION = '0.01';
 	or
 
   use Text::Distill;
-	Text::Distill:Distill($text);
-
-
-=head1 SUBROUTINES/METHODS
-
-=head2 GetFB2GemsFromFile($FilePath)
-
-Function receives a path to the fb2-file on an input, analyzes it and returns the reference
-on the array Jhash numbers
+	Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
 
 =cut
 
-sub GetFB2GemsFromFile {
-	my $FN = shift;
-	my $FB2Text = ExtractTextFromFB2File($FN);
-	return TextToGems($FB2Text);
-}
-
-
 # EXTRACT BLOCK
+
+=head1 Service functions
 
 =head2 ExtractTextFromFB2File($FilePath)
 
-Function receives a path to the fb2-file on an input and returns string of all important text from this file
+Function receives a path to the fb2-file and returns all significant text from the file as a string
 
 =cut
 
@@ -197,7 +184,7 @@ sub ExtractTextFromFB2File {
 
 =head2 ExtractTextFromTXTFile($FilePath)
 
-Function receives a path to the text-file on an input and returns string of all important text from this file
+Function receives a path to the text-file and returns all significant text from the file as a string
 
 =cut
 
@@ -214,7 +201,7 @@ sub ExtractTextFromTXTFile {
 
 =head2 ExtractTextFromDocFile($FilePath)
 
-Function receives a path to the doc-file on an input and returns string of all important text from this file
+Function receives a path to the doc-file and returns all significant text from the file as a string
 
 =cut
 
@@ -229,7 +216,7 @@ sub ExtractTextFromDocFile {
 
 =head2 ExtractTextFromDOCXFile($FilePath)
 
-Function receives a path to the docx-file on an input and returns string of all important text from this file
+Function receives a path to the docx-file and returns all significant text from the file as a string
 
 =cut
 
@@ -269,7 +256,7 @@ sub ExtractTextFromDOCXFile {
 
 =head2 ExtractTextFromEPUBFile($FilePath)
 
-Function receives a path to the epub-file on an input and returns string of all important text from this file
+Function receives a path to the epub-file and returns all significant text from the file as a string
 
 =cut
 
@@ -342,14 +329,6 @@ sub ExtractTextFromEPUBFile {
 }
 
 
-=head2 ExtractSingleZipFile($FilePath, $ExtractedFilePath)
-
-Function extract  file with tetx from fb2.zip or txt.zip archive
-
-Returns : address of extracted file from archive
-
-=cut
-
 sub ExtractSingleZipFile {
 	my $FN = shift;
 	my $Ext = shift;
@@ -367,9 +346,11 @@ sub ExtractSingleZipFile {
 
 =head2 DetectBookFormat($FilePath, ($Format))
 
-Function detected format of e-book and returns format of file (string)
+Function detected format of e-book and returns format of file (string). You
+may suggest the format to start with too speed up the process a bit
 
-$Format can be 'fb2.zip' ,	'fb2' , 'doc.zip' , 'doc' , 'docx.zip' , 'docx' , 'epub.zip' , 'epub' , 'txt.zip' , 'txt'
+$Format can be 'fb2.zip',	'fb2', 'doc.zip', 'doc', 'docx.zip',
+'docx', 'epub.zip', 'epub', 'txt.zip', 'txt'
 
 =cut
 
@@ -386,14 +367,29 @@ sub DetectBookFormat {
 	return;
 }
 
+=head1 Distilling gems from text
+
 =head2 TextToGems($UTF8TextString)
 
-Function transforming the text (the valid line UTF8 is expected) in
-array of 32-bit numbers hashes (Jenkins's Hash function). Text
-it is splitted into fragments on statistically allocated sequences
-"numbers", the first and last fragment is rejected, short fragments
-are rejected, from remained we consider hashes and
-returns reference to the array.
+What you really need to know is that TextToGem's from exactly the same texts are
+eqlal, texts with small changes have similar "gems" as well. And
+if two texts have 3+ common gems - they share some text parts, for sure. This is somewhat
+close to "Edit distance", but fast on calc and indexable. So you can effectively
+search for citings or plagiarism. Choosen split-method makes average detection
+segment about 2k of text (1-2 paper pages), so this package will not normally detect
+a single equal paragraph. If you need more precise match extended @SplitChars with some
+sequences from SeqNumStats.xlsx on GitHub, I guiess you can get down to parts of
+about 300 chars without significant losses (don't forget to lower $MinPartSize as well).
+
+Function transforming the text (valid UTF8 expected) into an
+array of 32-bit hash-summs (Jenkins's Hash). Text is at first flattened the hard
+way (something like soundex), than splitted into fragments by statistically
+choosen sequences. First and the last fragments are rejected, short fragments are
+rejected as well, from remaining strings we calc hashes and
+returns reference to them in the array.
+
+Should return one 32-bit jHash from 2kb of source text (may vary from text to
+text thou).
 
 =cut
 
@@ -457,11 +453,17 @@ sub LikeSoundex {
 
 =pod
 
-=head1 Distill($UTF8TextString)
+=head2 Distill($UTF8TextString)
 
-Function transforming actually the text (the valid line UTF8 is expected)
-in sequence of numbers. Functionally there corresponds 'soundex'
-with inclusion of rules for the Russian letters
+Transforming the text (valid UTF8 expected) into a sequence of 1-8 numbers
+(string as well). Internally used by TextToGems, but you may use it's output
+with standart "edit distance" algorithm. As this string is shorter you math will
+go much faster.
+
+At the end works somewhat close to 'soundex' with addition of some basic rules
+for cyrillic chars, pre- and post-cleanup and utf normalization. Drops strange
+sequences, drops short words as well (how are you going to make you plagiarism
+without copying the long words, huh?)
 
 =cut
 
@@ -522,17 +524,26 @@ sub Distill {
 
 =head1 Internal Functions:
 
-Receives a path to the file on an input and checks whether this of
+Receives a path to the file and checks whether this of
 
 CheckIfDocZip() - MS Word .doc in zip-archive
+
 CheckIfEPubZip() - Electronic Publication .epub in zip-archive
+
 CheckIfDocxZip - MS Word 2007 .docx  in zip-archive
+
 CheckIfFB2Zip() - FictionBook2  (FB2)  in zip-archive
+
 CheckIfTXT2Zip() - text-file in zip-archive
+
 CheckIfEPub() - Electronic Publication .epub
+
 CheckIfDocx() - MS Word 2007 .docx
+
 CheckIfDoc() - MS Word .doc
+
 CheckIfFB2() - FictionBook2 (FB2)
+
 CheckIfTXT() - text-file
 
 =cut
@@ -665,13 +676,11 @@ sub CheckIfTXT {
 =head1 AUTHOR
 
 Litres.ru, C<< <gu at litres.ru> >>
+Get the latest code from L<https://github.com/Litres/TextDistill>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-text-distill at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Text-Distill>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
+Please report any bugs or feature requests to L<https://github.com/Litres/TextDistill/issues>.
 
 
 
