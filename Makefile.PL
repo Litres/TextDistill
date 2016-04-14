@@ -8,7 +8,7 @@ WriteMakefile(
     AUTHOR           => q{Litres.ru <gu@litres.ru>},
     VERSION_FROM     => 'lib/Text/Distill.pm',
     ABSTRACT_FROM    => 'lib/Text/Distill.pm',
-    LICENSE          => 'artistic_2',
+    LICENSE          => 'LGPL_3.0',
     PL_FILES         => {},
     MIN_PERL_VERSION => 5.006001,
     CONFIGURE_REQUIRES => {
