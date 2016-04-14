@@ -6,9 +6,7 @@ use warnings;
 use Digest::JHash;
 use XML::LibXML;
 use XML::LibXSLT;
-use Encode::Detect;
 use Text::Extract::Word;
-use Carp;
 use HTML::TreeBuilder;
 use OLE::Storage_Lite;
 use Text::Unidecode v1.27;
@@ -16,6 +14,7 @@ use Unicode::Normalize v1.25;
 use Encode::Detect;
 use Encode;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+use Carp;
 
 our (@ISA, @EXPORT_OK);
 BEGIN {
@@ -671,6 +670,20 @@ sub CheckIfTXT {
 	return $String =! /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
 }
 
+=head1 REQUIRED MODULES
+
+Digest::JHash;
+XML::LibXML;
+XML::LibXSLT;
+Encode::Detect;
+Text::Extract::Word;
+HTML::TreeBuilder;
+OLE::Storage_Lite;
+Text::Unidecode (v1.27 or later);
+Unicode::Normalize (v1.25 or later);
+Archive::Zip
+Encode;
+Carp;
 
 =head1 AUTHOR
 
@@ -680,8 +693,6 @@ Get the latest code from L<https://github.com/Litres/TextDistill>
 =head1 BUGS
 
 Please report any bugs or feature requests to L<https://github.com/Litres/TextDistill/issues>.
-
-
 
 =head1 SUPPORT
 
