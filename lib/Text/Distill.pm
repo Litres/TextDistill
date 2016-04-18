@@ -146,13 +146,13 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-  use Text::Distill qw(Distill);
-	Distill($text);
+use Text::Distill qw(Distill);
+Distill($text);
 
-	or
+or
 
-  use Text::Distill;
-	Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
+use Text::Distill;
+Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
 
 =cut
 
@@ -344,8 +344,8 @@ sub ExtractSingleZipFile {
 
 =head2 DetectBookFormat($FilePath, ($Format))
 
-Function detected format of e-book and returns format of file (string). You
-may suggest the format to start with too speed up the process a bit
+Function detects format of an e-book and returns it. You
+may suggest the format to start with, this wiil speed up the process a bit.
 
 $Format can be 'fb2.zip',	'fb2', 'doc.zip', 'doc', 'docx.zip',
 'docx', 'epub.zip', 'epub', 'txt.zip', 'txt'
