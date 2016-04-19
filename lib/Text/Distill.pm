@@ -86,19 +86,9 @@ my $XSL_FB3_2_String = q{
   <xsl:output method="text" encoding="UTF-8"/>
   <xsl:variable name="linebr"><xsl:text>&#010;</xsl:text></xsl:variable>
 
-  <xsl:template match="fb:section|
-                      fb:div|
-                      fb:notebody|
-                      fb:epigraph|
-                      fb:blockquote|
-                      fb:pre|
-                      fb:poem|
-                      fb:stanza|
-                      fb:table|
-                      fb:title|
-                      fb:subtitle|
+  <xsl:template match="fb:subtitle|
                       fb:p|
-                      fb:br|
+                      fb:li|
                       fb:page-break-type">
     <xsl:apply-templates/>
     <xsl:value-of select="$linebr"/>
