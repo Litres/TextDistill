@@ -31,7 +31,7 @@ my $Result = GemsValidate($Gems, $Url);
 if ($OPT{'fullinfo'}) {
 	print JSON::XS->new->pretty(1)->encode($Result);
 } else {
-	print $Result->{'verdict'};
+	print $Result->{'verdict'}."\n";
 }
 
 sub help {

@@ -18,6 +18,8 @@ use Carp;
 use LWP::UserAgent;
 use JSON::XS;
 
+Archive::Zip::setErrorHandler(sub{});
+
 our (@ISA, @EXPORT_OK);
 BEGIN {
   require Exporter;
@@ -519,7 +521,7 @@ sub ExtractSingleZipFile {
   my @Files = $Zip->members();
   return unless (scalar @Files == 1 && $Files[0]->{fileName} =~ /(\.$Ext)$/);
 
-  my $OutFile = $XPortal::Settings::TMPPath . '/check_' . $$ . '_' . $Files[0]->{fileName};
+  my $OutFile = 'check_' . $$ . '_' . $Files[0]->{fileName};
 
   return  $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
 }
@@ -537,11 +539,11 @@ $Format can be 'fb2.zip', 'fb2', 'doc.zip', 'doc', 'docx.zip',
 sub DetectBookFormat {
   my $File = shift;
   my $Format = shift;
-if (defined $Format && $Format =~/($rxFormats)/) {
+  if (defined $Format && $Format =~/^($rxFormats)$/) {
     $Format = $1;
-} else {
+  } else {
     $Format = '';
-}
+  }
 
   #$Format первым пойдет
   my @Formats = ($Format || (),  grep{ $_ ne $Format } @DetectionOrder);
