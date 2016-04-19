@@ -21,30 +21,30 @@ BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
   @EXPORT_OK = qw(
-		Distill
-		LikeSoundex
-		TextToGems
-		DetectBookFormat
-		ExtractSingleZipFile
-		CheckIfTXT
-		CheckIfFB2
-		CheckIfFB3
-		CheckIfDocx
-		CheckIfEPub
-		CheckIfDoc
-		CheckIfTXTZip
-		CheckIfFB2Zip
-		CheckIfDocxZip
-		CheckIfEPubZip
-		CheckIfDocZip
-		ExtractTextFromEPUBFile
-		ExtractTextFromDOCXFile
-		ExtractTextFromDocFile
-		ExtractTextFromTXTFile
-		ExtractTextFromFB2File
-		ExtractTextFromFB3File
-		GetFB2GemsFromFile
-	);  # symbols to export on request
+    Distill
+    LikeSoundex
+    TextToGems
+    DetectBookFormat
+    ExtractSingleZipFile
+    CheckIfTXT
+    CheckIfFB2
+    CheckIfFB3
+    CheckIfDocx
+    CheckIfEPub
+    CheckIfDoc
+    CheckIfTXTZip
+    CheckIfFB2Zip
+    CheckIfDocxZip
+    CheckIfEPubZip
+    CheckIfDocZip
+    ExtractTextFromEPUBFile
+    ExtractTextFromDOCXFile
+    ExtractTextFromDocFile
+    ExtractTextFromTXTFile
+    ExtractTextFromFB2File
+    ExtractTextFromFB3File
+    GetFB2GemsFromFile
+  );  # symbols to export on request
 }
 
 my $XSL_FB2_2_String = q{
@@ -84,7 +84,7 @@ my $XSL_FB3_2_String = q{
   <xsl:variable name="linebr"><xsl:text>&#010;</xsl:text></xsl:variable>
 
   <xsl:template match="fb:section|
-											fb:div|
+                      fb:div|
                       fb:notebody|
                       fb:epigraph|
                       fb:blockquote|
@@ -108,23 +108,23 @@ my $XSL_FB3_2_String = q{
 
 my $XSL_Docx_2_Txt = q{
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
-	xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-	<xsl:output method="text" />
-	<xsl:template match="/">
-		<xsl:apply-templates select="//w:body" />
-	</xsl:template>
-	<xsl:template match="w:body">
-		<xsl:apply-templates />
-	</xsl:template>
-	<xsl:template match="w:p">
-		<xsl:if test="w:pPr/w:spacing/@w:after=0"><xsl:text>&#13;&#10;</xsl:text></xsl:if>
-		<xsl:apply-templates/><xsl:if test="position()!=last()"><xsl:text>&#13;&#10;</xsl:text></xsl:if>
-	</xsl:template>
-	<xsl:template match="w:r">
-		<xsl:for-each select="w:t">
-			<xsl:value-of select="." />
-		</xsl:for-each>
-	</xsl:template>
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <xsl:output method="text" />
+  <xsl:template match="/">
+    <xsl:apply-templates select="//w:body" />
+  </xsl:template>
+  <xsl:template match="w:body">
+    <xsl:apply-templates />
+  </xsl:template>
+  <xsl:template match="w:p">
+    <xsl:if test="w:pPr/w:spacing/@w:after=0"><xsl:text>&#13;&#10;</xsl:text></xsl:if>
+    <xsl:apply-templates/><xsl:if test="position()!=last()"><xsl:text>&#13;&#10;</xsl:text></xsl:if>
+  </xsl:template>
+  <xsl:template match="w:r">
+    <xsl:for-each select="w:t">
+      <xsl:value-of select="." />
+    </xsl:for-each>
+  </xsl:template>
 </xsl:stylesheet>
 };
 
@@ -132,36 +132,36 @@ my $XSL_Docx_2_Txt = q{
 my $SoundexExpendable = qr/уеёыаоэяиюьъaehiouwy/i;
 
 # Статистически подобранные "буквосочетания", бьющие тексты на на куски по ~20к
-# отбиралось по языкам: ru	en	it	de	fr	es	pl	be	cs	sp	lv
+# отбиралось по языкам: ru  en  it  de  fr  es  pl  be  cs  sp  lv
 # в теории этот набор должен более-менее ровно нарезать любой текст на куски по ~2к
 my @SplitChars = qw(3856 6542 4562 6383 4136 2856 4585 5512
-	2483 5426 2654 3286 5856 4245 4135 4515 4534 8312 5822 5316 1255 8316 5842);
+  2483 5426 2654 3286 5856 4245 4135 4515 4534 8312 5822 5316 1255 8316 5842);
 
 my $MinPartSize = 150;
 
 my @DetectionOrder = qw /epub.zip epub docx.zip docx doc.zip doc fb2.zip fb2 fb3 txt.zip txt/;
 
 my $Detectors = {
-	'fb2.zip'  => \&CheckIfFB2Zip,
-	'fb2'      => \&CheckIfFB2,
-	'fb3'      => \&CheckIfFB3,
-	'doc.zip'  => \&CheckIfDocZip,
-	'doc'      => \&CheckIfDoc,
-	'docx.zip' => \&CheckIfDocxZip,
-	'docx'     => \&CheckIfDocx,
-	'epub.zip' => \&CheckIfEPubZip,
-	'epub'     => \&CheckIfEPub,
-	'txt.zip'  => \&CheckIfTXTZip,
-	'txt'      => \&CheckIfTXT
+  'fb2.zip'  => \&CheckIfFB2Zip,
+  'fb2'      => \&CheckIfFB2,
+  'fb3'      => \&CheckIfFB3,
+  'doc.zip'  => \&CheckIfDocZip,
+  'doc'      => \&CheckIfDoc,
+  'docx.zip' => \&CheckIfDocxZip,
+  'docx'     => \&CheckIfDocx,
+  'epub.zip' => \&CheckIfEPubZip,
+  'epub'     => \&CheckIfEPub,
+  'txt.zip'  => \&CheckIfTXTZip,
+  'txt'      => \&CheckIfTXT
 };
 
 our $Extractors = {
-	'fb2'  => \&ExtractTextFromFB2File,
-	'fb3'  => \&ExtractTextFromFB3File,
-	'txt'  => \&ExtractTextFromTXTFile,
-	'doc'  => \&ExtractTextFromDocFile,
-	'docx' => \&ExtractTextFromDOCXFile,
-	'epub' => \&ExtractTextFromEPUBFile,
+  'fb2'  => \&ExtractTextFromFB2File,
+  'fb3'  => \&ExtractTextFromFB3File,
+  'txt'  => \&ExtractTextFromTXTFile,
+  'doc'  => \&ExtractTextFromDocFile,
+  'docx' => \&ExtractTextFromDOCXFile,
+  'epub' => \&ExtractTextFromEPUBFile,
 };
 
 our $rxFormats = join '|', keys %$Detectors;
@@ -206,7 +206,7 @@ Function receives a path to the fb2-file and returns all significant text from t
 =cut
 
 sub ExtractTextFromFB2File {
-	my $FN = shift;
+  my $FN = shift;
 
   my $parser = XML::LibXML->new();
   my $xslt = XML::LibXSLT->new();
@@ -226,90 +226,90 @@ Function receives a path to the fb3-file and returns all significant text from t
 =cut
 
 sub ExtractTextFromFB3File {
-	my $FN = shift;
+  my $FN = shift;
 
-	unless( -e $FN ) {
-		Carp::confess( "$FN doesn't exist" );
-	}
+  unless( -e $FN ) {
+    Carp::confess( "$FN doesn't exist" );
+  }
 
-	# Prepare XML parser, XSLT stylesheet and XPath Context beforehand
-	my $XML = XML::LibXML->new;
-	my $StyleDoc = $XML->load_xml( string => $XSL_FB3_2_String );
-	my $Stylesheet = XML::LibXSLT->new->parse_stylesheet( $StyleDoc );
-	my $XC = XML::LibXML::XPathContext->new;
-	$XC->registerNs( opcr => 'http://schemas.openxmlformats.org/package/2006/relationships' );
+  # Prepare XML parser, XSLT stylesheet and XPath Context beforehand
+  my $XML = XML::LibXML->new;
+  my $StyleDoc = $XML->load_xml( string => $XSL_FB3_2_String );
+  my $Stylesheet = XML::LibXSLT->new->parse_stylesheet( $StyleDoc );
+  my $XC = XML::LibXML::XPathContext->new;
+  $XC->registerNs( opcr => 'http://schemas.openxmlformats.org/package/2006/relationships' );
 
-	# FB3 is ZIP archive following Open Packaging Conventions. Let's find FB3 Body in it
-	my $Zip = Archive::Zip->new();
-	my $ReadStatus = $Zip->read( $FN );
-	unless( $ReadStatus == AZ_OK ) {
-		Carp::confess "[Archive::Zip error] $!";
-	}
-	# First we must find package Rels file
-	my $PackageRelsXML = $Zip->contents( '_rels/.rels' )
-		or do{ $! = 11; Carp::confess 'Broken OPC package, no package Rels file (/_rels/.rels)' };
+  # FB3 is ZIP archive following Open Packaging Conventions. Let's find FB3 Body in it
+  my $Zip = Archive::Zip->new();
+  my $ReadStatus = $Zip->read( $FN );
+  unless( $ReadStatus == AZ_OK ) {
+    Carp::confess "[Archive::Zip error] $!";
+  }
+  # First we must find package Rels file
+  my $PackageRelsXML = $Zip->contents( '_rels/.rels' )
+    or do{ $! = 11; Carp::confess 'Broken OPC package, no package Rels file (/_rels/.rels)' };
 
-	# Next find FB3 meta relation(s)
-	my $PackageRelsDoc = eval{ XML::LibXML->load_xml( string => $PackageRelsXML ) }
-		or do{ $! = 11; Carp::confess "Invalid XML: $@" };
+  # Next find FB3 meta relation(s)
+  my $PackageRelsDoc = eval{ XML::LibXML->load_xml( string => $PackageRelsXML ) }
+    or do{ $! = 11; Carp::confess "Invalid XML: $@" };
 
-	my @RelationNodes = $XC->findnodes(
-		'/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]',
-		$PackageRelsDoc
-	);
-	unless( @RelationNodes ) {
-		$! = 11;
-		Carp::confess 'No relation to FB3 meta';
-	}
-	
-	# There could be more than one book packed in FB3, so continue by parsing all the books found
-	my $Result = '';
-	for my $RelationNode ( @RelationNodes ) {
-		# Get FB3 meta name from relation
-		my $MetaName = OPCPartAbsoluteNameFromRelative( $RelationNode->getAttribute('Target'), '/' );
-		# Name in zip has no leading slash and name in OPC has it. Remove leading slash from OPC name
-		$MetaName =~ s:^/::;
+  my @RelationNodes = $XC->findnodes(
+    '/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]',
+    $PackageRelsDoc
+  );
+  unless( @RelationNodes ) {
+    $! = 11;
+    Carp::confess 'No relation to FB3 meta';
+  }
+  
+  # There could be more than one book packed in FB3, so continue by parsing all the books found
+  my $Result = '';
+  for my $RelationNode ( @RelationNodes ) {
+    # Get FB3 meta name from relation
+    my $MetaName = OPCPartAbsoluteNameFromRelative( $RelationNode->getAttribute('Target'), '/' );
+    # Name in zip has no leading slash and name in OPC has it. Remove leading slash from OPC name
+    $MetaName =~ s:^/::;
 
-		# Get FB3 meta Rels file name
-		my $MetaRelsName = $MetaName;
-		$MetaRelsName =~ s:^(.*/)?([^/]*)$:${1}_rels/${2}.rels:;
+    # Get FB3 meta Rels file name
+    my $MetaRelsName = $MetaName;
+    $MetaRelsName =~ s:^(.*/)?([^/]*)$:${1}_rels/${2}.rels:;
 
-		my $MetaRelsXML = $Zip->contents( $MetaRelsName )
-			or do{ $! = 11; Carp::confess "No FB3 meta Rels file (expecting $MetaRelsName)" };
+    my $MetaRelsXML = $Zip->contents( $MetaRelsName )
+      or do{ $! = 11; Carp::confess "No FB3 meta Rels file (expecting $MetaRelsName)" };
 
-		# Next we get relation to FB3 body from FB3 meta Rels file
-		my $MetaRelsDoc = eval{ $XML->load_xml( string => $MetaRelsXML ) }
-			or do{ $! = 11; Carp::confess "Invalid XML: $@" };
+    # Next we get relation to FB3 body from FB3 meta Rels file
+    my $MetaRelsDoc = eval{ $XML->load_xml( string => $MetaRelsXML ) }
+      or do{ $! = 11; Carp::confess "Invalid XML: $@" };
 
-		my( $BodyRelation ) = $XC->findnodes(
-			'/opcr:Relationships/opcr:Relationship[@Type="'.FB3_BODY_REL.'"]',
-			$MetaRelsDoc
-		);
-		unless( $BodyRelation ) {
-			$! = 11;
-			Carp::confess "No relation to FB3 body in $MetaRelsName";
-		}
+    my( $BodyRelation ) = $XC->findnodes(
+      '/opcr:Relationships/opcr:Relationship[@Type="'.FB3_BODY_REL.'"]',
+      $MetaRelsDoc
+    );
+    unless( $BodyRelation ) {
+      $! = 11;
+      Carp::confess "No relation to FB3 body in $MetaRelsName";
+    }
 
-		# Get FB3 body name from relation
-		my $CurrentDir = $MetaName;
-		$CurrentDir =~ s:/?[^/]*$::;
-		my $BodyName = OPCPartAbsoluteNameFromRelative(
-			$BodyRelation->getAttribute('Target'),
-			"/$CurrentDir" # add leading slash (zip name to opc)
-		);
-		$BodyName =~ s:^/::; # remove leading slash (opc name to zip)
+    # Get FB3 body name from relation
+    my $CurrentDir = $MetaName;
+    $CurrentDir =~ s:/?[^/]*$::;
+    my $BodyName = OPCPartAbsoluteNameFromRelative(
+      $BodyRelation->getAttribute('Target'),
+      "/$CurrentDir" # add leading slash (zip name to opc)
+    );
+    $BodyName =~ s:^/::; # remove leading slash (opc name to zip)
 
-		# Get FB3 body text
-		my $BodyXML = $Zip->contents( $BodyName )
-			or do{ $! = 11; Carp::confess "No FB3 body (expecting $BodyName)" };
+    # Get FB3 body text
+    my $BodyXML = $Zip->contents( $BodyName )
+      or do{ $! = 11; Carp::confess "No FB3 body (expecting $BodyName)" };
 
-		# Transform it into plain text
-		my $BodyDoc = $XML->load_xml( string => $BodyXML );
-		my $TransformResults = $Stylesheet->transform( $BodyDoc );
-		$Result .= $Stylesheet->output_string( $TransformResults );
-	}
-	
-	return $Result;
+    # Transform it into plain text
+    my $BodyDoc = $XML->load_xml( string => $BodyXML );
+    my $TransformResults = $Stylesheet->transform( $BodyDoc );
+    $Result .= $Stylesheet->output_string( $TransformResults );
+  }
+  
+  return $Result;
 }
 
 =head2 ExtractTextFromTXTFile($FilePath)
@@ -319,13 +319,13 @@ Function receives a path to the text-file and returns all significant text from 
 =cut
 
 sub ExtractTextFromTXTFile {
-	my $FN = shift;
-	open(TEXTFILE, "<$FN");
-	my $String = join('', <TEXTFILE>);
-	close TEXTFILE;
+  my $FN = shift;
+  open(TEXTFILE, "<$FN");
+  my $String = join('', <TEXTFILE>);
+  close TEXTFILE;
 
-	require Encode::Detect;
-	return Encode::decode('Detect', $String);
+  require Encode::Detect;
+  return Encode::decode('Detect', $String);
 }
 
 
@@ -336,12 +336,12 @@ Function receives a path to the doc-file and returns all significant text from t
 =cut
 
 sub ExtractTextFromDocFile {
-	my $FilePath = shift;
+  my $FilePath = shift;
 
-	my $File = Text::Extract::Word->new($FilePath);
-	my $Text = $File->get_text();
+  my $File = Text::Extract::Word->new($FilePath);
+  my $Text = $File->get_text();
 
-	return $Text;
+  return $Text;
 }
 
 =head2 ExtractTextFromDOCXFile($FilePath)
@@ -351,37 +351,37 @@ Function receives a path to the docx-file and returns all significant text from 
 =cut
 
 sub ExtractTextFromDOCXFile {
-	my $FN = shift;
+  my $FN = shift;
 
-	my $Result;
-	my $arch = Archive::Zip->new();
-	if ( $arch->read($FN) == AZ_OK ) {
-		if (my $DocumentMember = $arch->memberNamed( 'word/document.xml' )) {
-			my $XMLDocument = $DocumentMember->contents();
+  my $Result;
+  my $arch = Archive::Zip->new();
+  if ( $arch->read($FN) == AZ_OK ) {
+    if (my $DocumentMember = $arch->memberNamed( 'word/document.xml' )) {
+      my $XMLDocument = $DocumentMember->contents();
 
-			my $xml  = XML::LibXML->new();
-			my $xslt = XML::LibXSLT->new();
+      my $xml  = XML::LibXML->new();
+      my $xslt = XML::LibXSLT->new();
 
-			my $Document;
-			eval { $Document = $xml->parse_string($XMLDocument); };
-			if ($@) {
-				$! = 11;
-				Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
-			}
+      my $Document;
+      eval { $Document = $xml->parse_string($XMLDocument); };
+      if ($@) {
+        $! = 11;
+        Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
+      }
 
-			my $StyleDoc   = $xml->load_xml(string => $XSL_Docx_2_Txt);
+      my $StyleDoc   = $xml->load_xml(string => $XSL_Docx_2_Txt);
 
-			my $StyleSheet = $xslt->parse_stylesheet($StyleDoc);
+      my $StyleSheet = $xslt->parse_stylesheet($StyleDoc);
 
-			my $TransformResult = $StyleSheet->transform($Document);
+      my $TransformResult = $StyleSheet->transform($Document);
 
-			$Result = $StyleSheet->output_string($TransformResult);
-		}
-	} else {
-		Carp::confess("[Archive::Zip error] $!");
-	}
+      $Result = $StyleSheet->output_string($TransformResult);
+    }
+  } else {
+    Carp::confess("[Archive::Zip error] $!");
+  }
 
-	return $Result;
+  return $Result;
 }
 
 =head2 ExtractTextFromEPUBFile($FilePath)
@@ -391,71 +391,71 @@ Function receives a path to the epub-file and returns all significant text from 
 =cut
 
 sub ExtractTextFromEPUBFile {
-	my $FN = shift;
+  my $FN = shift;
 
-	my $Result;
-	my $arch = Archive::Zip->new();
-	if ( $arch->read($FN) == AZ_OK ) {
-		my $requiredMember = 'META-INF/container.xml';
-		if (my $ContainerMember = $arch->memberNamed( $requiredMember )) {
-			my $XMLContainer = $ContainerMember->contents();
+  my $Result;
+  my $arch = Archive::Zip->new();
+  if ( $arch->read($FN) == AZ_OK ) {
+    my $requiredMember = 'META-INF/container.xml';
+    if (my $ContainerMember = $arch->memberNamed( $requiredMember )) {
+      my $XMLContainer = $ContainerMember->contents();
 
-			my $xml = XML::LibXML->new;
-			my $xpc = XML::LibXML::XPathContext->new();
-			$xpc->registerNs('opf', 'urn:oasis:names:tc:opendocument:xmlns:container');
+      my $xml = XML::LibXML->new;
+      my $xpc = XML::LibXML::XPathContext->new();
+      $xpc->registerNs('opf', 'urn:oasis:names:tc:opendocument:xmlns:container');
 
-			my $Container;
-			eval { $Container = $xml->parse_string($XMLContainer); };
-			if ($@) {
-				$! = 11;
-				Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
-			}
+      my $Container;
+      eval { $Container = $xml->parse_string($XMLContainer); };
+      if ($@) {
+        $! = 11;
+        Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
+      }
 
-			my ($ContainerNode) = $xpc->findnodes('//opf:container/opf:rootfiles/opf:rootfile', $Container);
-			my $ContentPath = $ContainerNode->getAttributeNode('full-path')->string_value;
-			if (my $ContentMember = $arch->memberNamed( $ContentPath )) {
-				my $XMLContent = $ContentMember->contents();
+      my ($ContainerNode) = $xpc->findnodes('//opf:container/opf:rootfiles/opf:rootfile', $Container);
+      my $ContentPath = $ContainerNode->getAttributeNode('full-path')->string_value;
+      if (my $ContentMember = $arch->memberNamed( $ContentPath )) {
+        my $XMLContent = $ContentMember->contents();
 
-				$xpc->unregisterNs('opf');
-				$xpc->registerNs('opf', 'http://www.idpf.org/2007/opf');
+        $xpc->unregisterNs('opf');
+        $xpc->registerNs('opf', 'http://www.idpf.org/2007/opf');
 
-				my $Content;
-				eval { $Content = $xml->parse_string($XMLContent); };
-				if ($@) {
-					$! = 11;
-					Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
-				}
-				my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[
-						@media-type="application/xhtml+xml"
-					and
-						starts-with(@id, "content")
-					]',
-					$Content
-				);
-				my $HTMLTree = HTML::TreeBuilder->new();
-				foreach my $ContentNode (@ContentNodes) {
-					my $HTMLContentPath = $ContentNode->getAttributeNode('href')->string_value;
+        my $Content;
+        eval { $Content = $xml->parse_string($XMLContent); };
+        if ($@) {
+          $! = 11;
+          Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
+        }
+        my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[
+            @media-type="application/xhtml+xml"
+          and
+            starts-with(@id, "content")
+          ]',
+          $Content
+        );
+        my $HTMLTree = HTML::TreeBuilder->new();
+        foreach my $ContentNode (@ContentNodes) {
+          my $HTMLContentPath = $ContentNode->getAttributeNode('href')->string_value;
 
-					if (my $HTMLContentMember = $arch->memberNamed( $HTMLContentPath )) {
-						my $HTMLContent = $HTMLContentMember->contents();
+          if (my $HTMLContentMember = $arch->memberNamed( $HTMLContentPath )) {
+            my $HTMLContent = $HTMLContentMember->contents();
 
-						$HTMLTree->parse_content($HTMLContent);
-					} else {
-						Carp::confess("[Archive::Zip error] $HTMLContentPath not found in ePub ZIP container");
-					}
-				}
-				$Result = $HTMLTree->as_text;
-			} else {
-				Carp::confess("[Archive::Zip error] $ContentPath not found in ePub ZIP container");
-			}
-		} else {
-			Carp::confess("[Archive::Zip error] $requiredMember not found in ePub ZIP container");
-		}
-	} else {
-		Carp::confess("[Archive::Zip error] $!");
-	}
+            $HTMLTree->parse_content($HTMLContent);
+          } else {
+            Carp::confess("[Archive::Zip error] $HTMLContentPath not found in ePub ZIP container");
+          }
+        }
+        $Result = $HTMLTree->as_text;
+      } else {
+        Carp::confess("[Archive::Zip error] $ContentPath not found in ePub ZIP container");
+      }
+    } else {
+      Carp::confess("[Archive::Zip error] $requiredMember not found in ePub ZIP container");
+    }
+  } else {
+    Carp::confess("[Archive::Zip error] $!");
+  }
 
-	return $Result;
+  return $Result;
 }
 
 sub OPCPartAbsoluteNameFromRelative {
@@ -488,18 +488,18 @@ sub OPCPartAbsoluteNameFromRelative {
 
 
 sub ExtractSingleZipFile {
-	my $FN = shift;
-	my $Ext = shift;
-	my $Zip = Archive::Zip->new();
+  my $FN = shift;
+  my $Ext = shift;
+  my $Zip = Archive::Zip->new();
 
-	return unless ( $Zip->read( $FN ) == Archive::Zip::AZ_OK );
+  return unless ( $Zip->read( $FN ) == Archive::Zip::AZ_OK );
 
-	my @Files = $Zip->members();
-	return unless (scalar @Files == 1 && $Files[0]->{fileName} =~ /(\.$Ext)$/);
+  my @Files = $Zip->members();
+  return unless (scalar @Files == 1 && $Files[0]->{fileName} =~ /(\.$Ext)$/);
 
-	my $OutFile = $XPortal::Settings::TMPPath . '/check_' . $$ . '_' . $Files[0]->{fileName};
+  my $OutFile = $XPortal::Settings::TMPPath . '/check_' . $$ . '_' . $Files[0]->{fileName};
 
-	return  $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
+  return  $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
 }
 
 =head2 DetectBookFormat($FilePath, ($Format))
@@ -507,22 +507,22 @@ sub ExtractSingleZipFile {
 Function detects format of an e-book and returns it. You
 may suggest the format to start with, this wiil speed up the process a bit.
 
-$Format can be 'fb2.zip',	'fb2', 'doc.zip', 'doc', 'docx.zip',
+$Format can be 'fb2.zip', 'fb2', 'doc.zip', 'doc', 'docx.zip',
 'docx', 'epub.zip', 'epub', 'txt.zip', 'txt', 'fb3', 'fb3'
 
 =cut
 
 sub DetectBookFormat {
-	my $File = shift;
-	my $Format = shift =~/($rxFormats)/ ? $1 : undef;
+  my $File = shift;
+  my $Format = shift =~/($rxFormats)/ ? $1 : undef;
 
-	#$Format первым пойдет
-	my @Formats = ($Format || (),  grep{ $_ ne $Format } @DetectionOrder);
+  #$Format первым пойдет
+  my @Formats = ($Format || (),  grep{ $_ ne $Format } @DetectionOrder);
 
-	foreach( @Formats ) {
-		return $_ if $Detectors->{$_}->($File);
-	}
-	return;
+  foreach( @Formats ) {
+    return $_ if $Detectors->{$_}->($File);
+  }
+  return;
 }
 
 =head1 Distilling gems from text
@@ -557,56 +557,56 @@ $SplitRegexp = qr/$SplitRegexp/o;
 
 # Кластеризация согласных - глухие к глухим, звонкие к звонким
 #my %SoundexClusters = (
-#	'1' => 'бпфвbfpv',
-#	'2' => 'сцзкгхcgjkqsxz',
-#	'3' => 'тдdt',
-#	'4' => 'лйl',
-#	'5' => 'мнmn',
-#	'6' => 'рr',
-#	'7' => 'жшщч'
+# '1' => 'бпфвbfpv',
+# '2' => 'сцзкгхcgjkqsxz',
+# '3' => 'тдdt',
+# '4' => 'лйl',
+# '5' => 'мнmn',
+# '6' => 'рr',
+# '7' => 'жшщч'
 #);
 #my $SoundexTranslatorFrom;
 #my $SoundexTranslatorTo;
 #for (keys %SoundexClusters){
-#	$SoundexTranslatorFrom .= $SoundexClusters{$_};
-#	$SoundexTranslatorTo .= $_ x length($SoundexClusters{$_});
+# $SoundexTranslatorFrom .= $SoundexClusters{$_};
+# $SoundexTranslatorTo .= $_ x length($SoundexClusters{$_});
 #}
 
 sub TextToGems{
-	my $SrcText = Distill(shift) || return;
+  my $SrcText = Distill(shift) || return;
 
-	my @DistilledParts = split /$SplitRegexp/, $SrcText;
+  my @DistilledParts = split /$SplitRegexp/, $SrcText;
 
-	# Началу и концу верить всё равно нельзя
-	shift @DistilledParts;
-	pop @DistilledParts;
-	my @Hashes;
-	my %SeingHashes;
-	for (@DistilledParts){
-		# Если отрывок текста короткий - мы его проигнорируем
-		next if length($_)< $MinPartSize;
+  # Началу и концу верить всё равно нельзя
+  shift @DistilledParts;
+  pop @DistilledParts;
+  my @Hashes;
+  my %SeingHashes;
+  for (@DistilledParts){
+    # Если отрывок текста короткий - мы его проигнорируем
+    next if length($_)< $MinPartSize;
 
-		# Используется Хеш-функция Дженкинса, хорошо распределенный хэш на 32 бита
-		my $Hash = Digest::JHash::jhash($_);
+    # Используется Хеш-функция Дженкинса, хорошо распределенный хэш на 32 бита
+    my $Hash = Digest::JHash::jhash($_);
 
-		# Если один хэш дважды - нам второго не нужно
-		push @Hashes, $Hash unless $SeingHashes{$Hash}++;
-	}
-	return \@Hashes;
+    # Если один хэш дважды - нам второго не нужно
+    push @Hashes, $Hash unless $SeingHashes{$Hash}++;
+  }
+  return \@Hashes;
 }
 
 # Безжалостная мужланская функция, но в нашем случае чем топорней - тем лучше
 sub LikeSoundex {
-	my $S = shift;
+  my $S = shift;
 
-	# Гласные долой, в них вечно очепятки
-	$S =~ s/[$SoundexExpendable]+//gi;
+  # Гласные долой, в них вечно очепятки
+  $S =~ s/[$SoundexExpendable]+//gi;
 
-	# Заменяем согласные на их кластер
-	#	eval "\$String =~ tr/$SoundexTranslatorFrom/$SoundexTranslatorTo/";
-	$S =~ tr/рrлйlбпфвbfpvтдdtжшщчсцзкгхcgjkqsxzмнmn/664441111111133337777222222222222225555/;
+  # Заменяем согласные на их кластер
+  # eval "\$String =~ tr/$SoundexTranslatorFrom/$SoundexTranslatorTo/";
+  $S =~ tr/рrлйlбпфвbfpvтдdtжшщчсцзкгхcgjkqsxzмнmn/664441111111133337777222222222222225555/;
 
-	return $S;
+  return $S;
 }
 
 =pod
@@ -626,56 +626,56 @@ without copying the long words, huh?)
 =cut
 
 sub Distill {
-	my $String = shift;
+  my $String = shift;
 
-	#Нормализация юникода
-	$String = Unicode::Normalize::NFKC($String);
+  #Нормализация юникода
+  $String = Unicode::Normalize::NFKC($String);
 
-	#Переводим в lowercase
-	$String = lc($String);
+  #Переводим в lowercase
+  $String = lc($String);
 
   #Конструкции вида слово.слово разбиваем пробелом
   $String =~ s/(\w[.,;:&?!*#%+\^\\\/])(\w)/$1 $2/g;
 
-	# Понятные нам знаки причешем до упрощенного вида
-	$String =~ tr/ЁёÉÓÁéóáĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚŜśŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒǺǻǼǽǾǿђѓєѕіїјљњћќўџҐґẀẁẂẃẄẅỲỳ/ЕеЕОАеоаAaAaAaCcCcCcCcDdDdEeEeEeEeEeGgGgGgGgHhHhIiIiIiIiIiiiJjKkкLlLlLlLlLlNnNnNnnNnOoOoOoCCRrRrRrSSssSsŠšTtTtTtUuUuUuUuUuUuWwYyYZzZzZzffAaAaOohгеsiijлнhкyuГгWWWWWWYy/;
+  # Понятные нам знаки причешем до упрощенного вида
+  $String =~ tr/ЁёÉÓÁéóáĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚŜśŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒǺǻǼǽǾǿђѓєѕіїјљњћќўџҐґẀẁẂẃẄẅỲỳ/ЕеЕОАеоаAaAaAaCcCcCcCcDdDdEeEeEeEeEeGgGgGgGgHhHhIiIiIiIiIiiiJjKkкLlLlLlLlLlNnNnNnnNnOoOoOoCCRrRrRrSSssSsŠšTtTtTtUuUuUuUuUuUuWwYyYZzZzZzffAaAaOohгеsiijлнhкyuГгWWWWWWYy/;
 
-	# в словах вида папа-ёж глотаем тире (и любой другой мусор)
-	$String =~ s/(\w)([^\w\s]|_)+(\w)/$1$3/;
+  # в словах вида папа-ёж глотаем тире (и любой другой мусор)
+  $String =~ s/(\w)([^\w\s]|_)+(\w)/$1$3/;
 
-	# Короткие слова долой
-	# Короткие русские слова долой (у нас в русском и 6 знаков короткое)
-	$String =~ s/(\s|^)(\S{1,5}|[а-я]{6})\b/$1/g;
+  # Короткие слова долой
+  # Короткие русские слова долой (у нас в русском и 6 знаков короткое)
+  $String =~ s/(\s|^)(\S{1,5}|[а-я]{6})\b/$1/g;
 
-	# странные конструкции вида -=[мусорсрач]=- долой, ими легко засорить
-	# текст - глаз заигнорит, а робот будет думать что текст о другом. Не будем
-	# облегчать атакующим жизнь
-	$String =~ s/(^|\s)[^\w\s]+\s?\w+\s*[^\w\s]+($|\s)/$1$2/g;
+  # странные конструкции вида -=[мусорсрач]=- долой, ими легко засорить
+  # текст - глаз заигнорит, а робот будет думать что текст о другом. Не будем
+  # облегчать атакующим жизнь
+  $String =~ s/(^|\s)[^\w\s]+\s?\w+\s*[^\w\s]+($|\s)/$1$2/g;
 
-	$String =~ s/([^\w\s]|_)+//g;
+  $String =~ s/([^\w\s]|_)+//g;
 
-	return '' if $String !~ /\w/;
+  return '' if $String !~ /\w/;
 
-	$String = LikeSoundex($String);
+  $String = LikeSoundex($String);
 
-	# Все буквы, которых мы не знаем - перегоняем в транслит, говорят оно даж китайщину жрёт
-	if ($String =~ /[^\d\s]/){
-		$String = lc Text::Unidecode::unidecode($String);
+  # Все буквы, которых мы не знаем - перегоняем в транслит, говорят оно даж китайщину жрёт
+  if ($String =~ /[^\d\s]/){
+    $String = lc Text::Unidecode::unidecode($String);
 
-		# Уборка - II, уже для транслитерированной строки
-		$String = LikeSoundex($String);
-	}
+    # Уборка - II, уже для транслитерированной строки
+    $String = LikeSoundex($String);
+  }
 
-	# Убираем повторы
-	$String =~ s/(\w)\1+/$1/gi;
+  # Убираем повторы
+  $String =~ s/(\w)\1+/$1/gi;
 
-	# слишком длинные слова подрежем (оставив меточку 8, что поработали ножницами)
-	$String =~ s/(\s|^)(\S{4})\S+\b/${2}8/g;
+  # слишком длинные слова подрежем (оставив меточку 8, что поработали ножницами)
+  $String =~ s/(\s|^)(\S{4})\S+\b/${2}8/g;
 
-	# Всё, мы закончили, теперь пробелы убираем, да и до кучи что там еще было
-	$String =~ s/\D//g;
+  # Всё, мы закончили, теперь пробелы убираем, да и до кучи что там еще было
+  $String =~ s/\D//g;
 
-	return $String;
+  return $String;
 }
 
 # CHECK BLOCK
@@ -709,147 +709,147 @@ CheckIfTXT() - text-file
 =cut
 
 sub CheckIfDocZip {
-	my $FN = shift;
-	my $IntFile = ExtractSingleZipFile( $FN, 'doc' ) || return;
-	my $Result = CheckIfDoc( $IntFile );
-	unlink $IntFile;
-	return $Result;
+  my $FN = shift;
+  my $IntFile = ExtractSingleZipFile( $FN, 'doc' ) || return;
+  my $Result = CheckIfDoc( $IntFile );
+  unlink $IntFile;
+  return $Result;
 }
 
 sub CheckIfEPubZip {
-	my $FN = shift;
-	my $IntFile = ExtractSingleZipFile( $FN, 'epub' ) || return;
-	my $Result = CheckIfEPub( $IntFile );
-	unlink $IntFile;
-	return $Result;
+  my $FN = shift;
+  my $IntFile = ExtractSingleZipFile( $FN, 'epub' ) || return;
+  my $Result = CheckIfEPub( $IntFile );
+  unlink $IntFile;
+  return $Result;
 }
 
 sub CheckIfDocxZip {
-	my $FN = shift;
-	my $IntFile = ExtractSingleZipFile( $FN, 'docx' ) || return;
-	my $Result = CheckIfDocx( $IntFile );
-	unlink $IntFile;
-	return $Result;
+  my $FN = shift;
+  my $IntFile = ExtractSingleZipFile( $FN, 'docx' ) || return;
+  my $Result = CheckIfDocx( $IntFile );
+  unlink $IntFile;
+  return $Result;
 }
 
 sub CheckIfFB2Zip {
-	my $FN = shift;
-	my $IntFile = ExtractSingleZipFile( $FN, 'fb2' ) || return;
-	my $Result = CheckIfFB2( $IntFile );
-	unlink $IntFile;
-	return $Result;
+  my $FN = shift;
+  my $IntFile = ExtractSingleZipFile( $FN, 'fb2' ) || return;
+  my $Result = CheckIfFB2( $IntFile );
+  unlink $IntFile;
+  return $Result;
 }
 
 sub CheckIfTXTZip {
-	my $FN = shift;
-	my $IntFile = ExtractSingleZipFile( $FN, 'txt' ) || return;
-	my $Result = CheckIfTXT( $IntFile );
-	unlink $IntFile;
-	return $Result;
+  my $FN = shift;
+  my $IntFile = ExtractSingleZipFile( $FN, 'txt' ) || return;
+  my $Result = CheckIfTXT( $IntFile );
+  unlink $IntFile;
+  return $Result;
 }
 
 sub CheckIfEPub {
-	my $FN = shift;
+  my $FN = shift;
 
-	my $arch = Archive::Zip->new();
+  my $arch = Archive::Zip->new();
 
-	if ( $arch->read($FN) == AZ_OK ) {
-		if (my $ContainerMember = $arch->memberNamed( 'META-INF/container.xml' )) {
-			my $XMLContainer = $ContainerMember->contents();
+  if ( $arch->read($FN) == AZ_OK ) {
+    if (my $ContainerMember = $arch->memberNamed( 'META-INF/container.xml' )) {
+      my $XMLContainer = $ContainerMember->contents();
 
-			my $xml = XML::LibXML->new;
-			my $xpc = XML::LibXML::XPathContext->new();
-			$xpc->registerNs('opf', 'urn:oasis:names:tc:opendocument:xmlns:container');
+      my $xml = XML::LibXML->new;
+      my $xpc = XML::LibXML::XPathContext->new();
+      $xpc->registerNs('opf', 'urn:oasis:names:tc:opendocument:xmlns:container');
 
-			my $Container;
-			eval { $Container = $xml->parse_string($XMLContainer); };
-			return if ($@ || !$Container);
+      my $Container;
+      eval { $Container = $xml->parse_string($XMLContainer); };
+      return if ($@ || !$Container);
 
-			my ($ContainerNode) = $xpc->findnodes('//opf:container/opf:rootfiles/opf:rootfile', $Container);
-			my $ContentPath = $ContainerNode->getAttributeNode('full-path')->string_value;
+      my ($ContainerNode) = $xpc->findnodes('//opf:container/opf:rootfiles/opf:rootfile', $Container);
+      my $ContentPath = $ContainerNode->getAttributeNode('full-path')->string_value;
 
-			if (my $ContentMember = $arch->memberNamed( $ContentPath )) {
-				my $XMLContent = $ContentMember->contents();
+      if (my $ContentMember = $arch->memberNamed( $ContentPath )) {
+        my $XMLContent = $ContentMember->contents();
 
-				$xpc->unregisterNs('opf');
-				$xpc->registerNs('opf', 'http://www.idpf.org/2007/opf');
+        $xpc->unregisterNs('opf');
+        $xpc->registerNs('opf', 'http://www.idpf.org/2007/opf');
 
-				my $Content;
-				eval { $Content = $xml->parse_string($XMLContent); };
-				return if ($@ || !$Content);
+        my $Content;
+        eval { $Content = $xml->parse_string($XMLContent); };
+        return if ($@ || !$Content);
 
-				my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[
-						@media-type="application/xhtml+xml"
-					and
-						starts-with(@id, "content")
-					and
-						"content" = translate(@id, "0123456789", "")
-					]',
-					$Content
-				);
+        my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[
+            @media-type="application/xhtml+xml"
+          and
+            starts-with(@id, "content")
+          and
+            "content" = translate(@id, "0123456789", "")
+          ]',
+          $Content
+        );
 
-				my $existedContentMembers = 0;
-				foreach my $ContentNode (@ContentNodes) {
-					my $HTMLContentPath = $ContentNode->getAttributeNode('href')->string_value;
-					$existedContentMembers++ if $arch->memberNamed( $HTMLContentPath );
-				}
+        my $existedContentMembers = 0;
+        foreach my $ContentNode (@ContentNodes) {
+          my $HTMLContentPath = $ContentNode->getAttributeNode('href')->string_value;
+          $existedContentMembers++ if $arch->memberNamed( $HTMLContentPath );
+        }
 
-				return 1 if (@ContentNodes == $existedContentMembers);
-			}
-		}
-	}
-	return;
+        return 1 if (@ContentNodes == $existedContentMembers);
+      }
+    }
+  }
+  return;
 }
 
 sub CheckIfDocx {
-	my $FN = shift;
+  my $FN = shift;
 
-	my $arch = Archive::Zip->new();
+  my $arch = Archive::Zip->new();
 
-	return unless ( $arch->read($FN) == AZ_OK );
-	return 1 if $arch->memberNamed( 'word/document.xml' );
+  return unless ( $arch->read($FN) == AZ_OK );
+  return 1 if $arch->memberNamed( 'word/document.xml' );
 }
 
 sub CheckIfDoc {
-	my $FilePath = shift;
+  my $FilePath = shift;
 
-	my $ofs = OLE::Storage_Lite->new($FilePath);
-	my $name = Encode::encode("UCS-2LE", "WordDocument");
-	return $ofs->getPpsSearch([$name], 1, 1);
+  my $ofs = OLE::Storage_Lite->new($FilePath);
+  my $name = Encode::encode("UCS-2LE", "WordDocument");
+  return $ofs->getPpsSearch([$name], 1, 1);
 }
 
 sub CheckIfFB2 {
-	my $FN = shift;
-	my $parser = XML::LibXML->new;
-	my $XML = eval{ $parser->parse_file($FN) };
-	return if( $@ || !$XML );
-	return 1;
+  my $FN = shift;
+  my $parser = XML::LibXML->new;
+  my $XML = eval{ $parser->parse_file($FN) };
+  return if( $@ || !$XML );
+  return 1;
 }
 
 sub CheckIfFB3 {
-	my $FN = shift;
+  my $FN = shift;
 
-	my $Zip = Archive::Zip->new();
-	my $XC = XML::LibXML::XPathContext->new;
-	$XC->registerNs( opcr => 'http://schemas.openxmlformats.org/package/2006/relationships' );
+  my $Zip = Archive::Zip->new();
+  my $XC = XML::LibXML::XPathContext->new;
+  $XC->registerNs( opcr => 'http://schemas.openxmlformats.org/package/2006/relationships' );
 
-	my( $RelsXML, $RelsDoc );
-	if( $Zip->read($FN) == AZ_OK
-		and $RelsXML = $Zip->contents( '_rels/.rels' )
-		and $RelsDoc = eval{ XML::LibXML->load_xml( string => $RelsXML ) }
-		and $XC->exists( '/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]', $RelsDoc )) {
+  my( $RelsXML, $RelsDoc );
+  if( $Zip->read($FN) == AZ_OK
+    and $RelsXML = $Zip->contents( '_rels/.rels' )
+    and $RelsDoc = eval{ XML::LibXML->load_xml( string => $RelsXML ) }
+    and $XC->exists( '/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]', $RelsDoc )) {
 
-		return 1;
+    return 1;
 
-	} else {
-		return 0;
-	}
+  } else {
+    return 0;
+  }
 }
 
 sub CheckIfTXT {
-	my $FN = shift;
-	my $String = ExtractTextFromTXTFile($FN);
-	return $String =! /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
+  my $FN = shift;
+  my $String = ExtractTextFromTXTFile($FN);
+  return $String =! /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
 }
 
 =head1 REQUIRED MODULES
