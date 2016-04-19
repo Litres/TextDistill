@@ -28,6 +28,7 @@ BEGIN {
 		ExtractSingleZipFile
 		CheckIfTXT
 		CheckIfFB2
+		CheckIfFB3
 		CheckIfDocx
 		CheckIfEPub
 		CheckIfDoc
@@ -41,6 +42,7 @@ BEGIN {
 		ExtractTextFromDocFile
 		ExtractTextFromTXTFile
 		ExtractTextFromFB2File
+		ExtractTextFromFB3File
 		GetFB2GemsFromFile
 	);  # symbols to export on request
 }
@@ -70,6 +72,38 @@ my $XSL_FB2_2_String = q{
     <xsl:apply-templates/>
     <xsl:value-of select="$linebr"/>
   </xsl:template>
+</xsl:stylesheet>};
+
+my $XSL_FB3_2_String = q{
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:fb="http://www.fictionbook.org/FictionBook3/body"
+  xmlns:fbd="http://www.fictionbook.org/FictionBook3/description">
+
+  <xsl:strip-space elements="*"/>
+  <xsl:output method="text" encoding="UTF-8"/>
+  <xsl:variable name="linebr"><xsl:text>&#010;</xsl:text></xsl:variable>
+
+  <xsl:template match="fb:section|
+											fb:div|
+                      fb:notebody|
+                      fb:epigraph|
+                      fb:blockquote|
+                      fb:pre|
+                      fb:poem|
+                      fb:stanza|
+                      fb:table|
+                      fb:title|
+                      fb:subtitle|
+                      fb:p|
+                      fb:br|
+                      fb:page-break-type">
+    <xsl:apply-templates/>
+    <xsl:value-of select="$linebr"/>
+  </xsl:template>
+
+  <xsl:template match="fbd:fb3-relations|fbd:fb3-classification" />
+
+  <xsl:template match="fb:li">- <xsl:apply-templates/><xsl:value-of select="$linebr"/></xsl:template>
 </xsl:stylesheet>};
 
 my $XSL_Docx_2_Txt = q{
@@ -105,11 +139,12 @@ my @SplitChars = qw(3856 6542 4562 6383 4136 2856 4585 5512
 
 my $MinPartSize = 150;
 
-my @DetectionOrder = qw /epub.zip epub docx.zip docx doc.zip doc fb2.zip fb2 txt.zip txt/;
+my @DetectionOrder = qw /epub.zip epub docx.zip docx doc.zip doc fb2.zip fb2 fb3 txt.zip txt/;
 
 my $Detectors = {
 	'fb2.zip'  => \&CheckIfFB2Zip,
 	'fb2'      => \&CheckIfFB2,
+	'fb3'      => \&CheckIfFB3,
 	'doc.zip'  => \&CheckIfDocZip,
 	'doc'      => \&CheckIfDoc,
 	'docx.zip' => \&CheckIfDocxZip,
@@ -122,6 +157,7 @@ my $Detectors = {
 
 our $Extractors = {
 	'fb2'  => \&ExtractTextFromFB2File,
+	'fb3'  => \&ExtractTextFromFB3File,
 	'txt'  => \&ExtractTextFromTXTFile,
 	'doc'  => \&ExtractTextFromDocFile,
 	'docx' => \&ExtractTextFromDOCXFile,
@@ -129,6 +165,9 @@ our $Extractors = {
 };
 
 our $rxFormats = join '|', keys %$Detectors;
+
+use constant FB3_META_REL => 'http://www.fictionbook.org/FictionBook3/relationships/Book';
+use constant FB3_BODY_REL => 'http://www.fictionbook.org/FictionBook3/relationships/body';
 
 
 =head1 NAME
@@ -178,6 +217,99 @@ sub ExtractTextFromFB2File {
   my $Out = $stylesheet->output_string($results);
 
   return $Out;
+}
+
+=head2 ExtractTextFromFB2File($FilePath)
+
+Function receives a path to the fb3-file and returns all significant text from the file as a string
+
+=cut
+
+sub ExtractTextFromFB3File {
+	my $FN = shift;
+
+	unless( -e $FN ) {
+		Carp::confess( "$FN doesn't exist" );
+	}
+
+	# Prepare XML parser, XSLT stylesheet and XPath Context beforehand
+	my $XML = XML::LibXML->new;
+	my $StyleDoc = $XML->load_xml( string => $XSL_FB3_2_String );
+	my $Stylesheet = XML::LibXSLT->new->parse_stylesheet( $StyleDoc );
+	my $XC = XML::LibXML::XPathContext->new;
+	$XC->registerNs( opcr => 'http://schemas.openxmlformats.org/package/2006/relationships' );
+
+	# FB3 is ZIP archive following Open Packaging Conventions. Let's find FB3 Body in it
+	my $Zip = Archive::Zip->new();
+	my $ReadStatus = $Zip->read( $FN );
+	unless( $ReadStatus == AZ_OK ) {
+		Carp::confess "[Archive::Zip error] $!";
+	}
+	# First we must find package Rels file
+	my $PackageRelsXML = $Zip->contents( '_rels/.rels' )
+		or do{ $! = 11; Carp::confess 'Broken OPC package, no package Rels file (/_rels/.rels)' };
+
+	# Next find FB3 meta relation(s)
+	my $PackageRelsDoc = eval{ XML::LibXML->load_xml( string => $PackageRelsXML ) }
+		or do{ $! = 11; Carp::confess "Invalid XML: $@" };
+
+	my @RelationNodes = $XC->findnodes(
+		'/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]',
+		$PackageRelsDoc
+	);
+	unless( @RelationNodes ) {
+		$! = 11;
+		Carp::confess 'No relation to FB3 meta';
+	}
+	
+	# There could be more than one book packed in FB3, so continue by parsing all the books found
+	my $Result = '';
+	for my $RelationNode ( @RelationNodes ) {
+		# Get FB3 meta name from relation
+		my $MetaName = OPCPartAbsoluteNameFromRelative( $RelationNode->getAttribute('Target'), '/' );
+		# Name in zip has no leading slash and name in OPC has it. Remove leading slash from OPC name
+		$MetaName =~ s:^/::;
+
+		# Get FB3 meta Rels file name
+		my $MetaRelsName = $MetaName;
+		$MetaRelsName =~ s:^(.*/)?([^/]*)$:${1}_rels/${2}.rels:;
+
+		my $MetaRelsXML = $Zip->contents( $MetaRelsName )
+			or do{ $! = 11; Carp::confess "No FB3 meta Rels file (expecting $MetaRelsName)" };
+
+		# Next we get relation to FB3 body from FB3 meta Rels file
+		my $MetaRelsDoc = eval{ $XML->load_xml( string => $MetaRelsXML ) }
+			or do{ $! = 11; Carp::confess "Invalid XML: $@" };
+
+		my( $BodyRelation ) = $XC->findnodes(
+			'/opcr:Relationships/opcr:Relationship[@Type="'.FB3_BODY_REL.'"]',
+			$MetaRelsDoc
+		);
+		unless( $BodyRelation ) {
+			$! = 11;
+			Carp::confess "No relation to FB3 body in $MetaRelsName";
+		}
+
+		# Get FB3 body name from relation
+		my $CurrentDir = $MetaName;
+		$CurrentDir =~ s:/?[^/]*$::;
+		my $BodyName = OPCPartAbsoluteNameFromRelative(
+			$BodyRelation->getAttribute('Target'),
+			"/$CurrentDir" # add leading slash (zip name to opc)
+		);
+		$BodyName =~ s:^/::; # remove leading slash (opc name to zip)
+
+		# Get FB3 body text
+		my $BodyXML = $Zip->contents( $BodyName )
+			or do{ $! = 11; Carp::confess "No FB3 body (expecting $BodyName)" };
+
+		# Transform it into plain text
+		my $BodyDoc = $XML->load_xml( string => $BodyXML );
+		my $TransformResults = $Stylesheet->transform( $BodyDoc );
+		$Result .= $Stylesheet->output_string( $TransformResults );
+	}
+	
+	return $Result;
 }
 
 =head2 ExtractTextFromTXTFile($FilePath)
@@ -326,6 +458,34 @@ sub ExtractTextFromEPUBFile {
 	return $Result;
 }
 
+sub OPCPartAbsoluteNameFromRelative {
+  my $Name = shift;
+  my $Dir = shift;
+  $Dir =~ s:/$::; # remove trailing slash
+
+  my $FullName = ( $Name =~ m:^/: ) ? $Name :       # $Name has absolute path
+                                      "$Dir/$Name"; # $Name has relative path
+  $FullName = do{
+    use bytes; # A-Za-z are case insensitive
+    lc $FullName;
+  };
+
+  # parse all . and .. in name
+  my @CleanedSegments;
+  my @OriginalSegments = split m:/:, $FullName;
+  for my $Part ( @OriginalSegments ) {
+    if( $Part eq '.' ) {
+      # just skip
+    } elsif( $Part eq '..' ) {
+      pop @CleanedSegments;
+    } else {
+      push @CleanedSegments, $Part;
+    }
+  }
+
+  return join '/', @CleanedSegments;
+}
+
 
 sub ExtractSingleZipFile {
 	my $FN = shift;
@@ -348,7 +508,7 @@ Function detects format of an e-book and returns it. You
 may suggest the format to start with, this wiil speed up the process a bit.
 
 $Format can be 'fb2.zip',	'fb2', 'doc.zip', 'doc', 'docx.zip',
-'docx', 'epub.zip', 'epub', 'txt.zip', 'txt'
+'docx', 'epub.zip', 'epub', 'txt.zip', 'txt', 'fb3', 'fb3'
 
 =cut
 
@@ -542,6 +702,8 @@ CheckIfDoc() - MS Word .doc
 
 CheckIfFB2() - FictionBook2 (FB2)
 
+CheckIfFB3() - FictionBook3 (FB3)
+
 CheckIfTXT() - text-file
 
 =cut
@@ -662,6 +824,26 @@ sub CheckIfFB2 {
 	my $XML = eval{ $parser->parse_file($FN) };
 	return if( $@ || !$XML );
 	return 1;
+}
+
+sub CheckIfFB3 {
+	my $FN = shift;
+
+	my $Zip = Archive::Zip->new();
+	my $XC = XML::LibXML::XPathContext->new;
+	$XC->registerNs( opcr => 'http://schemas.openxmlformats.org/package/2006/relationships' );
+
+	my( $RelsXML, $RelsDoc );
+	if( $Zip->read($FN) == AZ_OK
+		and $RelsXML = $Zip->contents( '_rels/.rels' )
+		and $RelsDoc = eval{ XML::LibXML->load_xml( string => $RelsXML ) }
+		and $XC->exists( '/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]', $RelsDoc )) {
+
+		return 1;
+
+	} else {
+		return 0;
+	}
 }
 
 sub CheckIfTXT {
