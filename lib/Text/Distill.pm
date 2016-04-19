@@ -15,6 +15,8 @@ use Encode::Detect;
 use Encode;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use Carp;
+use LWP::UserAgent;
+use JSON::XS;
 
 our (@ISA, @EXPORT_OK);
 BEGIN {
@@ -44,6 +46,7 @@ BEGIN {
     ExtractTextFromFB2File
     ExtractTextFromFB3File
     GetFB2GemsFromFile
+    GemsValidate
   );  # symbols to export on request
 }
 
@@ -176,11 +179,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -194,6 +197,35 @@ use Text::Distill;
 Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
 
 =cut
+
+
+=head1 Remote validation
+There is at least one open service to check your text against
+known text database, docs are here: L<https://goo.gl/xmFMdr>.
+
+=head2 GemsValidate(\@Gems, $Url)
+
+Checks your gems against remote database, returns overall verdict
+and a structure with info on found titles
+
+=cut
+
+sub GemsValidate {
+	my $Gems = shift;
+	my $Url = shift;
+
+	my $ua = new LWP::UserAgent;
+	$ua->timeout(5);
+	my $Response = $ua->post( $Url, {gems => join ",",@$Gems});
+
+	my $Result;
+	if ($Response->is_success) {
+		return decode_json( $Response->decoded_content );
+	} else {
+		die $Response->status_line;
+	}
+
+}
 
 # EXTRACT BLOCK
 
@@ -261,7 +293,7 @@ sub ExtractTextFromFB3File {
     $! = 11;
     Carp::confess 'No relation to FB3 meta';
   }
-  
+
   # There could be more than one book packed in FB3, so continue by parsing all the books found
   my $Result = '';
   for my $RelationNode ( @RelationNodes ) {
@@ -308,7 +340,7 @@ sub ExtractTextFromFB3File {
     my $TransformResults = $Stylesheet->transform( $BodyDoc );
     $Result .= $Stylesheet->output_string( $TransformResults );
   }
-  
+
   return $Result;
 }
 
@@ -514,7 +546,12 @@ $Format can be 'fb2.zip', 'fb2', 'doc.zip', 'doc', 'docx.zip',
 
 sub DetectBookFormat {
   my $File = shift;
-  my $Format = shift =~/($rxFormats)/ ? $1 : undef;
+  my $Format = shift;
+if (defined $Format && $Format =~/($rxFormats)/) {
+    $Format = $1;
+} else {
+    $Format = '';
+}
 
   #$Format первым пойдет
   my @Formats = ($Format || (),  grep{ $_ ne $Format } @DetectionOrder);
@@ -688,7 +725,7 @@ CheckIfDocZip() - MS Word .doc in zip-archive
 
 CheckIfEPubZip() - Electronic Publication .epub in zip-archive
 
-CheckIfDocxZip - MS Word 2007 .docx  in zip-archive
+CheckIfDocxZip() - MS Word 2007 .docx  in zip-archive
 
 CheckIfFB2Zip() - FictionBook2  (FB2)  in zip-archive
 
@@ -866,6 +903,8 @@ Unicode::Normalize (v1.25 or later);
 Archive::Zip
 Encode;
 Carp;
+LWP::UserAgent;
+JSON::XS;
 
 =head1 AUTHOR
 

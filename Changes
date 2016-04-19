@@ -1,5 +1,7 @@
 Revision history for Text-Distill
 
-0.01    Date/time
+0.01    2016-04-15/00:00
         First version, released on an unsuspecting world.
 
+0.02    2016-04-19/20:00
+        Added function GemsValidate()

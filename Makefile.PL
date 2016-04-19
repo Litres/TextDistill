@@ -10,6 +10,7 @@ WriteMakefile(
     ABSTRACT_FROM    => 'lib/Text/Distill.pm',
     LICENSE          => 'LGPL_3.0',
     PL_FILES         => {},
+    EXE_FILES => ['script/plagiarism_check.pl'],
     MIN_PERL_VERSION => 5.006001,
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
