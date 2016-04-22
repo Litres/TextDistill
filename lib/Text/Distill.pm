@@ -193,6 +193,7 @@ Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
 
 
 =head1 Remote validation
+
 There is at least one open service to check your text against
 known text database, docs are here: L<https://goo.gl/xmFMdr>.
 
