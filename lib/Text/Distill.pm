@@ -17,6 +17,7 @@ use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use Carp;
 use LWP::UserAgent;
 use JSON::XS;
+use File::Temp;
 
 Archive::Zip::setErrorHandler(sub{});
 
@@ -521,9 +522,11 @@ sub ExtractSingleZipFile {
   my @Files = $Zip->members();
   return unless (scalar @Files == 1 && $Files[0]->{fileName} =~ /(\.$Ext)$/);
 
-  my $OutFile = 'check_' . $$ . '_' . $Files[0]->{fileName};
+  my $TmpDir = File::Temp::tempdir(cleanup=>1);
 
-  return  $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
+  my $OutFile = $TmpDir.'/check_' . $$ . '_' . $Files[0]->{fileName};
+
+  return $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
 }
 
 =head2 DetectBookFormat($FilePath, ($Format))
@@ -897,6 +900,7 @@ Encode;
 Carp;
 LWP::UserAgent;
 JSON::XS;
+File::Temp;
 
 =head1 AUTHOR
 
