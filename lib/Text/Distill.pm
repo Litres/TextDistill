@@ -745,7 +745,6 @@ sub CheckIfDocZip {
   my $FN = shift;
   my $IntFile = ExtractSingleZipFile( $FN, 'doc' ) || return;
   my $Result = CheckIfDoc( $IntFile );
-  unlink $IntFile;
   return $Result;
 }
 
@@ -753,7 +752,6 @@ sub CheckIfEPubZip {
   my $FN = shift;
   my $IntFile = ExtractSingleZipFile( $FN, 'epub' ) || return;
   my $Result = CheckIfEPub( $IntFile );
-  unlink $IntFile;
   return $Result;
 }
 
@@ -761,7 +759,6 @@ sub CheckIfDocxZip {
   my $FN = shift;
   my $IntFile = ExtractSingleZipFile( $FN, 'docx' ) || return;
   my $Result = CheckIfDocx( $IntFile );
-  unlink $IntFile;
   return $Result;
 }
 
@@ -769,7 +766,6 @@ sub CheckIfFB2Zip {
   my $FN = shift;
   my $IntFile = ExtractSingleZipFile( $FN, 'fb2' ) || return;
   my $Result = CheckIfFB2( $IntFile );
-  unlink $IntFile;
   return $Result;
 }
 
@@ -777,7 +773,6 @@ sub CheckIfTXTZip {
   my $FN = shift;
   my $IntFile = ExtractSingleZipFile( $FN, 'txt' ) || return;
   my $Result = CheckIfTXT( $IntFile );
-  unlink $IntFile;
   return $Result;
 }
 
@@ -903,6 +898,45 @@ LWP::UserAgent;
 JSON::XS;
 File::Temp;
 
+=head1 SCRIPTS
+
+=head2 plagiarism_check.pl - checks your ebook againts known texts
+
+Script uses check_by_gems API (https://goo.gl/xmFMdr). You can
+select any "check service" provider with CHECKURL (see below),
+by default text checked with LitRes copyright-check service:
+http://partnersdnld.litres.ru/copyright_check_by_gems/
+
+USAGE
+> plagiarism_check.pl FILEPATH [CHECKURL] [--full-info --help]
+
+EXAMPLE
+> plagiarism_check.pl /home/file.epub --full-info
+
+PARAMS
+    FILEPATH    path to file for check
+
+    CHECKURL    url of validating API to check file with. By default:
+	http://partnersdnld.litres.ru/copyright_check_by_gems/
+
+    --fullinfo  show full info of checked
+
+    --help      show this information
+
+OUTPUT
+    Ebook statuses explained:
+    - protected: there are copyright on this book. Or it is
+	forbidden for distribution by some other reason (law f.e.)
+
+    - free: ebook content owner distributes it for free (but
+	content may still be protected from certan use)
+
+    - public_domain: this it public domain, no restrictions
+	for use at all
+
+    - unknown: service have has no info on this text
+
+
 =head1 AUTHOR
 
 Litres.ru, C<< <gu at litres.ru> >>
@@ -960,7 +994,7 @@ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
 License for more details.
 
-Full text  of License <http://www.gnu.org/licenses/lgpl-3.0.en.html>.
+Full text of License L<http://www.gnu.org/licenses/lgpl-3.0.en.html>.
 
 =cut
 

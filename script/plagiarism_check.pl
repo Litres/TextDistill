@@ -75,6 +75,9 @@ OUTPUT
 
     - unknown: service have has no info on this text
 
+
+See more information at http://search.cpan.org/perldoc?Text::Distill
+
 _END
 ;
 exit;
