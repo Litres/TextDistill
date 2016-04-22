@@ -881,7 +881,7 @@ sub CheckIfFB3 {
 sub CheckIfTXT {
   my $FN = shift;
   my $String = ExtractTextFromTXTFile($FN);
-  return $String =! /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
+  return $String !~ /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
 }
 
 =head1 REQUIRED MODULES
