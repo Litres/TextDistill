@@ -5,3 +5,6 @@ Revision history for Text-Distill
 
 0.02    2016-04-19/20:00
         Added function GemsValidate()
+
+0.03    2016-04-25/18:00
+        use File::Temp for working with temporary files
