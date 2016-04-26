@@ -172,11 +172,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 SYNOPSIS
@@ -925,14 +925,15 @@ PARAMS
 
 OUTPUT
     Ebook statuses explained:
+
     - protected: there are copyright on this book. Or it is
-	forbidden for distribution by some other reason (law f.e.)
+    forbidden for distribution by some other reason (law f.e.)
 
     - free: ebook content owner distributes it for free (but
-	content may still be protected from certan use)
+    content may still be protected from certan use)
 
     - public_domain: this it public domain, no restrictions
-	for use at all
+    for use at all
 
     - unknown: service have has no info on this text
 

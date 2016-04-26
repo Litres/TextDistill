@@ -8,3 +8,6 @@ Revision history for Text-Distill
 
 0.03    2016-04-25/18:00
         use File::Temp for working with temporary files
+
+0.04    2016-04-26/15:00
+        Some changes to documentation
