@@ -124,16 +124,17 @@ my $XSL_Docx_2_Txt = q{
 </xsl:stylesheet>
 };
 
+our $MinPartSize = 150;
+
 # Гласные и прочие буквы \w, которые нас, тем не менее, не волнуют
 my $SoundexExpendable = qr/уеёыаоэяиюьъaehiouwy/i;
 
 # Статистически подобранные "буквосочетания", бьющие тексты на на куски по ~20к
 # отбиралось по языкам: ru  en  it  de  fr  es  pl  be  cs  sp  lv
 # в теории этот набор должен более-менее ровно нарезать любой текст на куски по ~2к
-my @SplitChars = qw(3856 6542 4562 6383 4136 2856 4585 5512
+our @SplitChars = qw(3856 6542 4562 6383 4136 2856 4585 5512
   2483 5426 2654 3286 5856 4245 4135 4515 4534 8312 5822 5316 1255 8316 5842);
 
-my $MinPartSize = 150;
 
 my @DetectionOrder = qw /epub.zip epub docx.zip docx doc.zip doc fb2.zip fb2 fb3 txt.zip txt/;
 
@@ -181,13 +182,26 @@ our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
- use Text::Distill qw(Distill);
- Distill($text);
+ use Text::Distill qw(TextToGems);
+
+ my $DistilledText1 = TextToGems($text1);
+ my $DistilledText2 = TextToGems($text2);
+
+ $DistilledText1 eq $DistilledText2 ? print("Equal") : print("Not equal");
 
 or
 
  use Text::Distill;
- Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
+
+ my $FileFormat = Text::Distill::DetectBookFormat($FilePath);
+ die "Not a fb2.zip file" if $FileFormat ne 'fb2.zip';
+
+ my $Text = Text::Distill::ExtractTextFromFB2File($FilePath);
+ my $Gems = TextToGems($Text);
+
+ my $TextInfo = Text::Distill::GemsValidate($Gems,'http://partnersdnld.litres.ru/copyright_check_by_gems/');
+
+ die "Copyright-protected content" if $TextInfo->{verdict} eq 'protected';
 
 =cut
 
@@ -530,10 +544,11 @@ sub ExtractSingleZipFile {
   return $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
 }
 
-=head2 DetectBookFormat($FilePath, ($Format))
+=head2 DetectBookFormat($FilePath, $Format)
 
 Function detects format of an e-book and returns it. You
-may suggest the format to start with, this wiil speed up the process a bit.
+may suggest the format to start with, this wiil speed up the process a bit
+(not requeted).
 
 $Format can be 'fb2.zip', 'fb2', 'doc.zip', 'doc', 'docx.zip',
 'docx', 'epub.zip', 'epub', 'txt.zip', 'txt', 'fb3', 'fb3'
@@ -562,25 +577,31 @@ sub DetectBookFormat {
 
 =head2 TextToGems($UTF8TextString)
 
+Transforms a text (valid UTF8 expected) into an array of 32-bit hash-summs
+(Jenkins's Hash). Text is at first flattened the hard
+way (something like soundex, see Distill below), than splitted into fragments by statistically
+choosen sequences. First and the last fragments are rejected, short fragments are
+rejected as well, from remaining strings calc hashes and
+returns reference to them in the array.
+
 What you really need to know is that TextToGem's from exactly the same texts are
 eqlal, texts with small changes have similar "gems" as well. And
 if two texts have 3+ common gems - they share some text parts, for sure. This is somewhat
 close to "Edit distance", but fast on calc and indexable. So you can effectively
 search for citings or plagiarism. Choosen split-method makes average detection
 segment about 2k of text (1-2 paper pages), so this package will not normally detect
-a single equal paragraph. If you need more precise match extended @SplitChars with some
+a single equal paragraph. If you need more precise match extended
+@Text::Distill::SplitChars with some
 sequences from SeqNumStats.xlsx on GitHub, I guiess you can get down to parts of
-about 300 chars without significant losses (don't forget to lower $MinPartSize as well).
+about 300 chars without problems. Just don't forget to lower
+$Text::Distill::MinPartSize as well and keep in mind GemsValidate will break
+if you play with $MinPartSize and @SplitChars.
 
-Function transforming the text (valid UTF8 expected) into an
-array of 32-bit hash-summs (Jenkins's Hash). Text is at first flattened the hard
-way (something like soundex), than splitted into fragments by statistically
-choosen sequences. First and the last fragments are rejected, short fragments are
-rejected as well, from remaining strings we calc hashes and
-returns reference to them in the array.
+Should return about one 32-bit jHash from every 2kb of source text
+(may vary depending on the text thou).
 
-Should return one 32-bit jHash from 2kb of source text (may vary from text to
-text thou).
+ my $Gems = TextToGems($String);
+ print join(',',@$Gems);
 
 =cut
 
@@ -648,13 +669,16 @@ sub LikeSoundex {
 
 Transforming the text (valid UTF8 expected) into a sequence of 1-8 numbers
 (string as well). Internally used by TextToGems, but you may use it's output
-with standart "edit distance" algorithm. As this string is shorter you math will
-go much faster.
+with standart "edit distance" algorithm, like L<Text::Levenshtein|Text::Levenshtein>. Distilled string
+is shorter, so you math will go much faster.
 
 At the end works somewhat close to 'soundex' with addition of some basic rules
 for cyrillic chars, pre- and post-cleanup and utf normalization. Drops strange
 sequences, drops short words as well (how are you going to make you plagiarism
 without copying the long words, huh?)
+
+ $Distilled = Distill($Text);  # $Distilled should be ~60% shorter than $Text
+
 
 =cut
 
@@ -713,31 +737,31 @@ sub Distill {
 
 # CHECK BLOCK
 
-=head1 Internal Functions:
+=head1 Internals:
 
-Receives a path to the file and checks whether this of
+Receives a path to the file and checks whether this file is ...
 
-CheckIfDocZip() - MS Word .doc in zip-archive
+B<CheckIfDocZip()> - MS Word .doc in zip-archive
 
-CheckIfEPubZip() - Electronic Publication .epub in zip-archive
+B<CheckIfEPubZip()> - Electronic Publication .epub in zip-archive
 
-CheckIfDocxZip() - MS Word 2007 .docx  in zip-archive
+B<CheckIfDocxZip()> - MS Word 2007 .docx  in zip-archive
 
-CheckIfFB2Zip() - FictionBook2  (FB2)  in zip-archive
+B<CheckIfFB2Zip()> - FictionBook2  (FB2)  in zip-archive
 
-CheckIfTXT2Zip() - text-file in zip-archive
+B<CheckIfTXT2Zip()> - text-file in zip-archive
 
-CheckIfEPub() - Electronic Publication .epub
+B<CheckIfEPub()> - Electronic Publication .epub
 
-CheckIfDocx() - MS Word 2007 .docx
+B<CheckIfDocx()> - MS Word 2007 .docx
 
-CheckIfDoc() - MS Word .doc
+B<CheckIfDoc()> - MS Word .doc
 
-CheckIfFB2() - FictionBook2 (FB2)
+B<CheckIfFB2()> - FictionBook2 (FB2)
 
-CheckIfFB3() - FictionBook3 (FB3)
+B<CheckIfFB3()> - FictionBook3 (FB3)
 
-CheckIfTXT() - text-file
+B<CheckIfTXT()> - text-file
 
 =cut
 
@@ -882,38 +906,38 @@ sub CheckIfTXT {
 
 =head1 REQUIRED MODULES
 
-Digest::JHash;
-XML::LibXML;
-XML::LibXSLT;
-Encode::Detect;
-Text::Extract::Word;
-HTML::TreeBuilder;
-OLE::Storage_Lite;
-Text::Unidecode (v1.27 or later);
-Unicode::Normalize (v1.25 or later);
-Archive::Zip
-Encode;
-Carp;
-LWP::UserAgent;
-JSON::XS;
-File::Temp;
+ Digest::JHash;
+ XML::LibXML;
+ XML::LibXSLT;
+ Encode::Detect;
+ Text::Extract::Word;
+ HTML::TreeBuilder;
+ OLE::Storage_Lite;
+ Text::Unidecode (v1.27 or later);
+ Unicode::Normalize (v1.25 or later);
+ Archive::Zip
+ Encode;
+ Carp;
+ LWP::UserAgent;
+ JSON::XS;
+ File::Temp;
 
 =head1 SCRIPTS
 
-=head2 plagiarism_check.pl - checks your ebook againts known texts
+=head2 plagiarism_check.pl - checks your ebook againts known texts database
 
-Script uses check_by_gems API (https://goo.gl/xmFMdr). You can
+Script uses check_by_gems API (L<https://goo.gl/xmFMdr>). You can
 select any "check service" provider with CHECKURL (see below),
 by default text checked with LitRes copyright-check service:
-http://partnersdnld.litres.ru/copyright_check_by_gems/
+L<http://partnersdnld.litres.ru/copyright_check_by_gems/>
 
 B<USAGE>
 
-> plagiarism_check.pl FILEPATH [CHECKURL] [--full-info --help]
+ > plagiarism_check.pl FILEPATH [CHECKURL] [--full-info] [--help]
 
 B<EXAMPLE>
 
-> plagiarism_check.pl /home/file.epub --full-info
+ > plagiarism_check.pl /home/file.epub --full-info
 
 B<PARAMS>
 
@@ -930,16 +954,15 @@ B<OUTPUT>
 
 Ebook statuses explained:
 
-B<I<protected:>> there are copyright on this book. Or it is
-forbidden for distribution by some other reason (law f.e.)
+B<I<protected>> there are either copyrights on this book or it is
+forbidden for distribution by some other reason (racist content, etc)
 
-B<I<free:>> ebook content owner distributes it for free (but
-content may still be protected from certan use)
+B<I<free>> ebook content owner distributes it for free (but
+content may still be protected from certan kind use)
 
-B<I<public_domain:>> this it public domain, no restrictions
-for use at all
+B<I<public_domain>> this it public domain, no restrictions at all
 
-B<I<unknown:>> service have has no info on this text
+B<I<unknown>> service have has no valid info on this text
 
 
 =head1 AUTHOR

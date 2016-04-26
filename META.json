@@ -42,6 +42,7 @@
             "Unicode::Normalize" : "0",
             "XML::LibXML" : "0",
             "XML::LibXSLT" : "0",
+            "JSON::XS" : "0",
             "perl" : "5.006001"
          }
       }
