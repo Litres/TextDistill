@@ -43,6 +43,8 @@
             "XML::LibXML" : "0",
             "XML::LibXSLT" : "0",
             "JSON::XS" : "0",
+            "LWP::UserAgent" : "0",
+            "File::Temp" : "0",
             "perl" : "5.006001"
          }
       }
