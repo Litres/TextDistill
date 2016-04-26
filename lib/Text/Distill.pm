@@ -181,13 +181,13 @@ our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
-use Text::Distill qw(Distill);
-Distill($text);
+ use Text::Distill qw(Distill);
+ Distill($text);
 
 or
 
-use Text::Distill;
-Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
+ use Text::Distill;
+ Text::Distill::Distill(Text::Distill::ExtractTextFromFB2File($fb2_file_path));
 
 =cut
 
@@ -907,35 +907,39 @@ select any "check service" provider with CHECKURL (see below),
 by default text checked with LitRes copyright-check service:
 http://partnersdnld.litres.ru/copyright_check_by_gems/
 
-USAGE
+B<USAGE>
+
 > plagiarism_check.pl FILEPATH [CHECKURL] [--full-info --help]
 
-EXAMPLE
+B<EXAMPLE>
+
 > plagiarism_check.pl /home/file.epub --full-info
 
-PARAMS
-    FILEPATH    path to file for check
+B<PARAMS>
 
-    CHECKURL    url of validating API to check file with. By default:
-	http://partnersdnld.litres.ru/copyright_check_by_gems/
+B<I<FILEPATH>>    path to file for check
 
-    --fullinfo  show full info of checked
+B<I<CHECKURL>>    url of validating API to check file with. By default:
+            http://partnersdnld.litres.ru/copyright_check_by_gems/
 
-    --help      show this information
+B<I<--full-info>>  show full info of checked
 
-OUTPUT
-    Ebook statuses explained:
+B<I<--help>>      show this information
 
-    - protected: there are copyright on this book. Or it is
-    forbidden for distribution by some other reason (law f.e.)
+B<OUTPUT>
 
-    - free: ebook content owner distributes it for free (but
-    content may still be protected from certan use)
+Ebook statuses explained:
 
-    - public_domain: this it public domain, no restrictions
-    for use at all
+B<I<protected:>> there are copyright on this book. Or it is
+forbidden for distribution by some other reason (law f.e.)
 
-    - unknown: service have has no info on this text
+B<I<free:>> ebook content owner distributes it for free (but
+content may still be protected from certan use)
+
+B<I<public_domain:>> this it public domain, no restrictions
+for use at all
+
+B<I<unknown:>> service have has no info on this text
 
 
 =head1 AUTHOR
@@ -975,10 +979,6 @@ L<http://cpanratings.perl.org/d/Text-Distill>
 L<http://search.cpan.org/dist/Text-Distill/>
 
 =back
-
-
-=head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 

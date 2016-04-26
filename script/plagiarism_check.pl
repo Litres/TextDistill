@@ -58,7 +58,7 @@ PARAMS
     CHECKURL    url of validating API to check file with. By default:
 	http://partnersdnld.litres.ru/copyright_check_by_gems/
 
-    --fullinfo  show full info of checked
+    --full-info  show full info of checked
 
     --help      show this information
 
