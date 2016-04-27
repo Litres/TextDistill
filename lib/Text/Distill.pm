@@ -182,10 +182,10 @@ our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
- use Text::Distill qw(TextToGems);
+ use Text::Distill qw(Distill);
 
- my $DistilledText1 = TextToGems($text1);
- my $DistilledText2 = TextToGems($text2);
+ my $DistilledText1 = Distill($text1);
+ my $DistilledText2 = Distill($text2);
 
  $DistilledText1 eq $DistilledText2 ? print("Equal") : print("Not equal");
 
