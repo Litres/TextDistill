@@ -173,11 +173,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
@@ -484,7 +484,7 @@ sub ExtractTextFromEPUBFile {
             Carp::confess("[Archive::Zip error] $HTMLContentPath not found in ePub ZIP container");
           }
         }
-        $Result = $HTMLTree->as_text;
+        $Result = DecodeUtf8($HTMLTree->as_text);
       } else {
         Carp::confess("[Archive::Zip error] $ContentPath not found in ePub ZIP container");
       }
@@ -902,6 +902,14 @@ sub CheckIfTXT {
   my $FN = shift;
   my $String = ExtractTextFromTXTFile($FN);
   return $String !~ /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
+}
+
+sub DecodeUtf8 {
+  my $Out = shift;
+  if ($Out && !Encode::is_utf8($Out)) {
+    $Out = Encode::decode_utf8($Out);
+  }
+  return $Out;
 }
 
 =head1 REQUIRED MODULES
