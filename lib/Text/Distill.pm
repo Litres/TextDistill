@@ -162,6 +162,7 @@ our $Extractors = {
 };
 
 our $rxFormats = join '|', keys %$Detectors;
+$rxFormats =~ s/\./\\./g;
 
 use constant FB3_META_REL => 'http://www.fictionbook.org/FictionBook3/relationships/Book';
 use constant FB3_BODY_REL => 'http://www.fictionbook.org/FictionBook3/relationships/body';
@@ -173,11 +174,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS

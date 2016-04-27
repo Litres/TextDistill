@@ -14,3 +14,6 @@ Revision history for Text-Distill
 
 0.05    2016-04-27/13:00
         DecodeUtf8() added and used in the module
+
+0.06    2016-04-27/20:00
+        Fix some regexp bugs
