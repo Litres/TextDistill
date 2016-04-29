@@ -7,6 +7,8 @@ use LWP::UserAgent;
 use JSON::XS;
 use Data::Dumper;
 
+binmode STDOUT, ":utf8";
+
 my %OPT;
 GetOptions(
 	'help' => \$OPT{'help'},
