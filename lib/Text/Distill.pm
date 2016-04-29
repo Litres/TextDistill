@@ -200,12 +200,57 @@ or
  my $Text = Text::Distill::ExtractTextFromFB2File($FilePath);
  my $Gems = TextToGems($Text);
 
- my $TextInfo = Text::Distill::GemsValidate($Gems,'http://partnersdnld.litres.ru/copyright_check_by_gems/');
+ my $VURL = 'http://partnersdnld.litres.ru/copyright_check_by_gems/';
+ my $TextInfo = Text::Distill::GemsValidate($Gems,$VURL);
 
  die "Copyright-protected content" if $TextInfo->{verdict} eq 'protected';
 
-=cut
+=head1 Distilling gems from text
 
+=head2 TextToGems($UTF8TextString)
+
+Transforms a text (valid UTF8 expected) into an array of 32-bit hash-summs
+(Jenkins's Hash). Text is at first flattened the hard
+way (something like soundex, see Distill below), than splitted into fragments by statistically
+choosen sequences. First and the last fragments are rejected, short fragments are
+rejected as well, from remaining strings calc hashes and
+returns reference to them in the array.
+
+What you really need to know is that TextToGem's from exactly the same texts are
+eqlal, texts with small changes have similar "gems" as well. And
+if two texts have 3+ common gems - they share some text parts, for sure. This is somewhat
+close to "Edit distance", but fast on calc and indexable. So you can effectively
+search for citings or plagiarism. Choosen split-method makes average detection
+segment about 2k of text (1-2 paper pages), so this package will not normally detect
+a single equal paragraph. If you need more precise match extended
+@Text::Distill::SplitChars with some
+sequences from SeqNumStats.xlsx on GitHub, I guiess you can get down to parts of
+about 300 chars without problems. Just don't forget to lower
+$Text::Distill::MinPartSize as well and keep in mind GemsValidate will break
+if you play with $MinPartSize and @SplitChars.
+
+Should return about one 32-bit jHash from every 2kb of source text
+(may vary depending on the text thou).
+
+ my $Gems = TextToGems($String);
+ print join(',',@$Gems);
+
+
+=pod
+
+=head2 Distill($UTF8TextString)
+
+Transforming the text (valid UTF8 expected) into a sequence of 1-8 numbers
+(string as well). Internally used by TextToGems, but you may use it's output
+with standart "edit distance" algorithm, like L<Text::Levenshtein|Text::Levenshtein>. Distilled string
+is shorter, so you math will go much faster.
+
+At the end works somewhat close to 'soundex' with addition of some basic rules
+for cyrillic chars, pre- and post-cleanup and utf normalization. Drops strange
+sequences, drops short words as well (how are you going to make you plagiarism
+without copying the long words, huh?)
+
+ $Distilled = Distill($Text);  # $Distilled should be ~60% shorter than $Text
 
 =head1 Remote validation
 
@@ -549,7 +594,7 @@ sub ExtractSingleZipFile {
 
 Function detects format of an e-book and returns it. You
 may suggest the format to start with, this wiil speed up the process a bit
-(not requeted).
+(not required).
 
 $Format can be 'fb2.zip', 'fb2', 'doc.zip', 'doc', 'docx.zip',
 'docx', 'epub.zip', 'epub', 'txt.zip', 'txt', 'fb3', 'fb3'
@@ -574,37 +619,6 @@ sub DetectBookFormat {
   return;
 }
 
-=head1 Distilling gems from text
-
-=head2 TextToGems($UTF8TextString)
-
-Transforms a text (valid UTF8 expected) into an array of 32-bit hash-summs
-(Jenkins's Hash). Text is at first flattened the hard
-way (something like soundex, see Distill below), than splitted into fragments by statistically
-choosen sequences. First and the last fragments are rejected, short fragments are
-rejected as well, from remaining strings calc hashes and
-returns reference to them in the array.
-
-What you really need to know is that TextToGem's from exactly the same texts are
-eqlal, texts with small changes have similar "gems" as well. And
-if two texts have 3+ common gems - they share some text parts, for sure. This is somewhat
-close to "Edit distance", but fast on calc and indexable. So you can effectively
-search for citings or plagiarism. Choosen split-method makes average detection
-segment about 2k of text (1-2 paper pages), so this package will not normally detect
-a single equal paragraph. If you need more precise match extended
-@Text::Distill::SplitChars with some
-sequences from SeqNumStats.xlsx on GitHub, I guiess you can get down to parts of
-about 300 chars without problems. Just don't forget to lower
-$Text::Distill::MinPartSize as well and keep in mind GemsValidate will break
-if you play with $MinPartSize and @SplitChars.
-
-Should return about one 32-bit jHash from every 2kb of source text
-(may vary depending on the text thou).
-
- my $Gems = TextToGems($String);
- print join(',',@$Gems);
-
-=cut
 
 our $SplitRegexp = join ('|',@SplitChars);
 
@@ -664,24 +678,6 @@ sub LikeSoundex {
   return $S;
 }
 
-=pod
-
-=head2 Distill($UTF8TextString)
-
-Transforming the text (valid UTF8 expected) into a sequence of 1-8 numbers
-(string as well). Internally used by TextToGems, but you may use it's output
-with standart "edit distance" algorithm, like L<Text::Levenshtein|Text::Levenshtein>. Distilled string
-is shorter, so you math will go much faster.
-
-At the end works somewhat close to 'soundex' with addition of some basic rules
-for cyrillic chars, pre- and post-cleanup and utf normalization. Drops strange
-sequences, drops short words as well (how are you going to make you plagiarism
-without copying the long words, huh?)
-
- $Distilled = Distill($Text);  # $Distilled should be ~60% shorter than $Text
-
-
-=cut
 
 sub Distill {
   my $String = shift;
