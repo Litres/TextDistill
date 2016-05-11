@@ -17,3 +17,6 @@ Revision history for Text-Distill
 
 0.06    2016-04-27/20:00
         Fix some regexp bugs
+
+0.08    2016-05-11/19:00
+        script/plagiarism_check.pl support zip-packed file

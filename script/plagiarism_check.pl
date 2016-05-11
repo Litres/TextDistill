@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
-use Text::Distill qw(DetectBookFormat TextToGems GemsValidate);
+use Text::Distill qw(DetectBookFormat TextToGems GemsValidate ExtractSingleZipFile);
 use Getopt::Long;
 use LWP::UserAgent;
 use JSON::XS;
@@ -24,6 +24,11 @@ die "file '$FilePath' not exists" unless -f $FilePath;
 
 my $FileType = DetectBookFormat($FilePath);
 die "can't detect file '$FileType'" unless $FileType;
+
+if ($FileType =~ /^(.+?)\.zip$/) {
+	$FileType = $1;
+	$FilePath = ExtractSingleZipFile($FilePath,$FileType);
+}
 
 my $Text = $Text::Distill::Extractors->{$FileType}($FilePath);
 my $Gems = TextToGems($Text);
