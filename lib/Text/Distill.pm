@@ -295,6 +295,7 @@ sub ExtractTextFromFB2File {
   my $FN = shift;
 
   my $parser = XML::LibXML->new();
+	$parser->set_option('expand_entities',0);
   my $xslt = XML::LibXSLT->new();
   my $source = $parser->parse_file($FN);
   my $style_doc = $parser->load_xml(string => $XSL_FB2_2_String);
