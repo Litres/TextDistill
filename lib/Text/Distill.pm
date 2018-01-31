@@ -164,6 +164,12 @@ our $Extractors = {
 our $rxFormats = join '|', keys %$Detectors;
 $rxFormats =~ s/\./\\./g;
 
+our %LibXMLParserOptions = (
+  'no_network'      => 1,
+  'expand_entities' => 0,
+  'load_ext_dtd'    => 0,
+);
+
 use constant FB3_META_REL => 'http://www.fictionbook.org/FictionBook3/relationships/Book';
 use constant FB3_BODY_REL => 'http://www.fictionbook.org/FictionBook3/relationships/body';
 
@@ -294,8 +300,7 @@ Function receives a path to the fb2-file and returns all significant text from t
 sub ExtractTextFromFB2File {
   my $FN = shift;
 
-  my $parser = XML::LibXML->new();
-	$parser->set_option('expand_entities',0);
+  my $parser = XML::LibXML->new(%LibXMLParserOptions);
   my $xslt = XML::LibXSLT->new();
   my $source = $parser->parse_file($FN);
   my $style_doc = $parser->load_xml(string => $XSL_FB2_2_String);
@@ -320,7 +325,7 @@ sub ExtractTextFromFB3File {
   }
 
   # Prepare XML parser, XSLT stylesheet and XPath Context beforehand
-  my $XML = XML::LibXML->new;
+  my $XML = XML::LibXML->new(%LibXMLParserOptions);
   my $StyleDoc = $XML->load_xml( string => $XSL_FB3_2_String );
   my $Stylesheet = XML::LibXSLT->new->parse_stylesheet( $StyleDoc );
   my $XC = XML::LibXML::XPathContext->new;
@@ -337,7 +342,7 @@ sub ExtractTextFromFB3File {
     or do{ $! = 11; Carp::confess 'Broken OPC package, no package Rels file (/_rels/.rels)' };
 
   # Next find FB3 meta relation(s)
-  my $PackageRelsDoc = eval{ XML::LibXML->load_xml( string => $PackageRelsXML ) }
+  my $PackageRelsDoc = eval{ XML::LibXML->load_xml( %LibXMLParserOptions, string => $PackageRelsXML ) }
     or do{ $! = 11; Carp::confess "Invalid XML: $@" };
 
   my @RelationNodes = $XC->findnodes(
@@ -446,7 +451,7 @@ sub ExtractTextFromDOCXFile {
     if (my $DocumentMember = $arch->memberNamed( 'word/document.xml' )) {
       my $XMLDocument = $DocumentMember->contents();
 
-      my $xml  = XML::LibXML->new();
+      my $xml  = XML::LibXML->new(%LibXMLParserOptions);
       my $xslt = XML::LibXSLT->new();
 
       my $Document;
@@ -487,7 +492,7 @@ sub ExtractTextFromEPUBFile {
     if (my $ContainerMember = $arch->memberNamed( $requiredMember )) {
       my $XMLContainer = $ContainerMember->contents();
 
-      my $xml = XML::LibXML->new;
+      my $xml = XML::LibXML->new(%LibXMLParserOptions);
       my $xpc = XML::LibXML::XPathContext->new();
       $xpc->registerNs('opf', 'urn:oasis:names:tc:opendocument:xmlns:container');
 
@@ -807,7 +812,7 @@ sub CheckIfEPub {
     if (my $ContainerMember = $arch->memberNamed( 'META-INF/container.xml' )) {
       my $XMLContainer = $ContainerMember->contents();
 
-      my $xml = XML::LibXML->new;
+      my $xml = XML::LibXML->new(%LibXMLParserOptions);
       my $xpc = XML::LibXML::XPathContext->new();
       $xpc->registerNs('opf', 'urn:oasis:names:tc:opendocument:xmlns:container');
 
@@ -870,7 +875,7 @@ sub CheckIfDoc {
 
 sub CheckIfFB2 {
   my $FN = shift;
-  my $parser = XML::LibXML->new;
+  my $parser = XML::LibXML->new(%LibXMLParserOptions);
   my $XML = eval{ $parser->parse_file($FN) };
   return if( $@ || !$XML );
   return 1;
@@ -886,7 +891,7 @@ sub CheckIfFB3 {
   my( $RelsXML, $RelsDoc );
   if( $Zip->read($FN) == AZ_OK
     and $RelsXML = $Zip->contents( '_rels/.rels' )
-    and $RelsDoc = eval{ XML::LibXML->load_xml( string => $RelsXML ) }
+    and $RelsDoc = eval{ XML::LibXML->load_xml( %LibXMLParserOptions, string => $RelsXML ) }
     and $XC->exists( '/opcr:Relationships/opcr:Relationship[@Type="'.FB3_META_REL.'"]', $RelsDoc )) {
 
     return 1;
