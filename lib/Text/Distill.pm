@@ -180,11 +180,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.08
+Version 0.1
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.1';
 
 
 =head1 SYNOPSIS
@@ -311,7 +311,7 @@ sub ExtractTextFromFB2File {
   return $Out;
 }
 
-=head2 ExtractTextFromFB2File($FilePath)
+=head2 ExtractTextFromFB3File($FilePath)
 
 Function receives a path to the fb3-file and returns all significant text from the file as a string
 
@@ -396,7 +396,7 @@ sub ExtractTextFromFB3File {
       or do{ $! = 11; Carp::confess "No FB3 body (expecting $BodyName)" };
 
     # Transform it into plain text
-    my $BodyDoc = $XML->load_xml( string => $BodyXML );
+    my $BodyDoc = $XML->load_xml( string => $BodyXML, huge => 1 );
     my $TransformResults = $Stylesheet->transform( $BodyDoc );
     $Result .= $Stylesheet->output_string( $TransformResults );
   }
