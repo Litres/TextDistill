@@ -540,7 +540,7 @@ sub ExtractTextFromEPUBFile {
         } else {
 
           foreach my $ContentNode (@ContentNodes) {
-            push(@ContentFiles, ($ContentDir ? $ContentDir . '/' : '') . $ContentNode->getAttributeNode('href')->string_value);
+            push(@ContentFiles, ($ContentDir ? $ContentDir . '/' : '') . $ContentNode->getAttribute('href'));
           }
         }
 
