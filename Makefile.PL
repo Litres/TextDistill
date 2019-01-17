@@ -8,7 +8,7 @@ WriteMakefile(
     AUTHOR           => q{Litres.ru <gu@litres.ru>},
     VERSION_FROM     => 'lib/Text/Distill.pm',
     ABSTRACT_FROM    => 'lib/Text/Distill.pm',
-    LICENSE          => 'LGPL_3.0',
+    LICENSE          => 'lgpl_3_0',
     PL_FILES         => {},
     EXE_FILES => ['script/plagiarism_check.pl'],
     MIN_PERL_VERSION => 5.006001,

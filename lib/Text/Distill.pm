@@ -180,11 +180,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.1.2
+Version 0.2
 
 =cut
 
-our $VERSION = '0.1.2';
+our $VERSION = '0.2';
 
 
 =head1 SYNOPSIS
