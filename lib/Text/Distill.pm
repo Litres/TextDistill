@@ -180,11 +180,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.1
+Version 0.1.2
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = '0.1.2';
 
 
 =head1 SYNOPSIS
@@ -271,20 +271,16 @@ and a structure with info on found titles
 =cut
 
 sub GemsValidate {
-	my $Gems = shift;
-	my $Url = shift;
+  my $Gems = shift;
+  my $Url = shift;
 
-	my $ua = new LWP::UserAgent;
-	$ua->timeout(5);
-	my $Response = $ua->post( $Url, {gems => join ",",@$Gems});
+  my $ua = new LWP::UserAgent;
+  $ua->timeout(5);
+  my $Response = $ua->post( $Url, {gems => join ",",@$Gems});
 
-	my $Result;
-	if ($Response->is_success) {
-		return decode_json( $Response->decoded_content );
-	} else {
-		die $Response->status_line;
-	}
-
+  my $Result;
+  return decode_json( $Response->decoded_content ) if $Response->is_success;
+  die $Response->status_line;
 }
 
 # EXTRACT BLOCK
@@ -505,6 +501,9 @@ sub ExtractTextFromEPUBFile {
 
       my ($ContainerNode) = $xpc->findnodes('//opf:container/opf:rootfiles/opf:rootfile', $Container);
       my $ContentPath = $ContainerNode->getAttributeNode('full-path')->string_value;
+
+      my $ContentDir = $ContentPath; $ContentDir =~ s/\/?[^\/]+$//;
+
       if (my $ContentMember = $arch->memberNamed( $ContentPath )) {
         my $XMLContent = $ContentMember->contents();
 
@@ -517,20 +516,38 @@ sub ExtractTextFromEPUBFile {
           $! = 11;
           Carp::confess("[libxml2 error ". $@->code() ."] ". $@->message());
         }
-        my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[
-            @media-type="application/xhtml+xml"
-          and
-            starts-with(@id, "content")
-          ]',
-          $Content
-        );
-        my $HTMLTree = HTML::TreeBuilder->new();
-        foreach my $ContentNode (@ContentNodes) {
-          my $HTMLContentPath = $ContentNode->getAttributeNode('href')->string_value;
 
-          if (my $HTMLContentMember = $arch->memberNamed( $HTMLContentPath )) {
+        my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[@media-type="application/xhtml+xml"]', $Content);
+        my %ContentNodesHash;
+        for my $MItem ( @ContentNodes ) {
+          $ContentNodesHash{ $MItem->getAttribute('id') } = ($ContentDir ? $ContentDir . '/' : '') . $MItem->getAttribute('href');
+        }
+        my @Spine;
+        for my $MItem ($xpc->findnodes('//opf:package/opf:spine/opf:itemref',$Content)) {
+          my $IdRef = $MItem->getAttribute('idref');
+          push @Spine, $IdRef;
+        }
+
+        my $HTMLTree     = HTML::TreeBuilder->new();
+        my @ContentFiles = ();
+
+        if ( scalar @Spine ) {
+
+          foreach my $ContentNodeId ( @Spine ) {
+            push(@ContentFiles, $ContentNodesHash{ $ContentNodeId }) if $ContentNodesHash{ $ContentNodeId };
+          }
+
+        } else {
+
+          foreach my $ContentNode (@ContentNodes) {
+            push(@ContentFiles, ($ContentDir ? $ContentDir . '/' : '') . $ContentNode->getAttribute('href'));
+          }
+        }
+
+        foreach my $HTMLContentPath ( @ContentFiles ) {
+
+          if ( my $HTMLContentMember = $arch->memberNamed( $HTMLContentPath ) ) {
             my $HTMLContent = $HTMLContentMember->contents();
-
             $HTMLTree->parse_content($HTMLContent);
           } else {
             Carp::confess("[Archive::Zip error] $HTMLContentPath not found in ePub ZIP container");
