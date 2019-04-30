@@ -18,6 +18,7 @@ use Carp;
 use LWP::UserAgent;
 use JSON::XS;
 use File::Temp;
+use URI::Escape;
 
 Archive::Zip::setErrorHandler(sub{});
 
@@ -839,6 +840,11 @@ sub CheckIfEPub {
 
       my ($ContainerNode) = $xpc->findnodes('//opf:container/opf:rootfiles/opf:rootfile', $Container);
       my $ContentPath = $ContainerNode->getAttributeNode('full-path')->string_value;
+      $ContentPath = uri_unescape($ContentPath);
+
+      my $ContentDir = $ContentPath;
+      $ContentDir =~ s/\/?[^\/]+$//;
+      $ContentDir .= '/' if $ContentDir;
 
       if (my $ContentMember = $arch->memberNamed( $ContentPath )) {
         my $XMLContent = $ContentMember->contents();
@@ -850,20 +856,15 @@ sub CheckIfEPub {
         eval { $Content = $xml->parse_string($XMLContent); };
         return if ($@ || !$Content);
 
-        my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[
-            @media-type="application/xhtml+xml"
-          and
-            starts-with(@id, "content")
-          and
-            "content" = translate(@id, "0123456789", "")
-          ]',
+        my @ContentNodes = $xpc->findnodes('//opf:package/opf:manifest/opf:item[@media-type="application/xhtml+xml"]',
           $Content
         );
 
         my $existedContentMembers = 0;
         foreach my $ContentNode (@ContentNodes) {
           my $HTMLContentPath = $ContentNode->getAttributeNode('href')->string_value;
-          $existedContentMembers++ if $arch->memberNamed( $HTMLContentPath );
+          $HTMLContentPath = uri_unescape($HTMLContentPath);
+          $existedContentMembers++ if $arch->memberNamed( $ContentDir.$HTMLContentPath );
         }
 
         return 1 if (@ContentNodes == $existedContentMembers);

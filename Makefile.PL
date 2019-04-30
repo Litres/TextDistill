@@ -33,6 +33,7 @@ WriteMakefile(
 			'LWP::UserAgent' => 0,
 			'JSON::XS' => 0,
 			'File::Temp' => 0,
+			'URI::Escape' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Text-Distill-*' },
