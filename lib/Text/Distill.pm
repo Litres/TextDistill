@@ -181,11 +181,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.3
+Version 0.4
 
 =cut
 
-our $VERSION = '0.3';
+our $VERSION = '0.4';
 
 
 =head1 SYNOPSIS
@@ -607,11 +607,11 @@ sub ExtractSingleZipFile {
   my @Files = $Zip->members();
   return unless (scalar @Files == 1 && $Files[0]->{fileName} =~ /(\.$Ext)$/);
 
-  my $TmpDir = File::Temp::tempdir(cleanup=>1);
+  my $TmpDir = File::Temp::tempdir(CLEANUP=>1);
 
   my $OutFile = $TmpDir.'/check_' . $$ . '_' . $Files[0]->{fileName};
 
-  return $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? $OutFile : undef;
+  return $Zip->extractMember( $Files[0], $OutFile ) == Archive::Zip::AZ_OK ? {'file'=>$OutFile,'tmp'=>$TmpDir} : undef;
 }
 
 =head2 DetectBookFormat($FilePath, $Format)
@@ -788,36 +788,41 @@ B<CheckIfTXT()> - text-file
 
 sub CheckIfDocZip {
   my $FN = shift;
-  my $IntFile = ExtractSingleZipFile( $FN, 'doc' ) || return;
-  my $Result = CheckIfDoc( $IntFile );
+  my $Extract = ExtractSingleZipFile( $FN, 'doc' ) || return;
+  my $Result = CheckIfDoc( $Extract->{'file'} );
+  ForceRmDir($Extract->{'tmp'});
   return $Result;
 }
 
 sub CheckIfEPubZip {
   my $FN = shift;
-  my $IntFile = ExtractSingleZipFile( $FN, 'epub' ) || return;
-  my $Result = CheckIfEPub( $IntFile );
+  my $Extract = ExtractSingleZipFile( $FN, 'epub' ) || return;
+  my $Result = CheckIfEPub( $Extract->{'file'} );
+  ForceRmDir($Extract->{'tmp'});
   return $Result;
 }
 
 sub CheckIfDocxZip {
   my $FN = shift;
-  my $IntFile = ExtractSingleZipFile( $FN, 'docx' ) || return;
-  my $Result = CheckIfDocx( $IntFile );
+  my $Extract = ExtractSingleZipFile( $FN, 'docx' ) || return;
+  my $Result = CheckIfDocx( $Extract->{'file'} );
+  ForceRmDir($Extract->{'tmp'});
   return $Result;
 }
 
 sub CheckIfFB2Zip {
   my $FN = shift;
-  my $IntFile = ExtractSingleZipFile( $FN, 'fb2' ) || return;
-  my $Result = CheckIfFB2( $IntFile );
+  my $Extract = ExtractSingleZipFile( $FN, 'fb2' ) || return;
+  my $Result = CheckIfFB2( $Extract->{'file'} );
+  ForceRmDir($Extract->{'tmp'});
   return $Result;
 }
 
 sub CheckIfTXTZip {
   my $FN = shift;
-  my $IntFile = ExtractSingleZipFile( $FN, 'txt' ) || return;
-  my $Result = CheckIfTXT( $IntFile );
+  my $Extract = ExtractSingleZipFile( $FN, 'txt' ) || return;
+  my $Result = CheckIfTXT( $Extract->{'file'} );
+  ForceRmDir($Extract->{'tmp'});
   return $Result;
 }
 
@@ -931,6 +936,26 @@ sub DecodeUtf8 {
     $Out = Encode::decode_utf8($Out);
   }
   return $Out;
+}
+
+sub ForceRmDir{
+  my $DirToClean=shift;
+	return unless -e $DirToClean;
+	my @FilesToKill;
+	opendir(INPUT_FOLDER, $DirToClean);
+	for (readdir(INPUT_FOLDER)){
+		next if /\A\.\Z|(\A\.\.\Z)/;
+		if (-d "$DirToClean/$_"){
+			ForceRmDir("$DirToClean/$_")
+		} else {
+			push (@FilesToKill, $_)
+		}
+	}
+	closedir(INPUT_FOLDER);
+	for (@FilesToKill){
+		unlink "$DirToClean/$_" or warn "error '$!' deleting file '$DirToClean/$_'";
+	}
+	rmdir($DirToClean) or die("Error removing dir $DirToClean!\n$!");
 }
 
 =head1 REQUIRED MODULES
