@@ -181,11 +181,11 @@ Text::Distill - Quick texts compare, plagiarism and common parts detection
 
 =head1 VERSION
 
-Version 0.4
+Version 0.5
 
 =cut
 
-our $VERSION = '0.4';
+our $VERSION = '0.5';
 
 
 =head1 SYNOPSIS
@@ -409,6 +409,7 @@ Function receives a path to the text-file and returns all significant text from 
 
 sub ExtractTextFromTXTFile {
   my $FN = shift;
+  CFile($FN);
   open(TEXTFILE, "<$FN");
   my $String = join('', <TEXTFILE>);
   close TEXTFILE;
@@ -426,6 +427,7 @@ Function receives a path to the doc-file and returns all significant text from t
 
 sub ExtractTextFromDocFile {
   my $FilePath = shift;
+  CFile($FilePath);
 
   my $File = Text::Extract::Word->new($FilePath);
   my $Text = $File->get_text();
@@ -441,6 +443,7 @@ Function receives a path to the docx-file and returns all significant text from 
 
 sub ExtractTextFromDOCXFile {
   my $FN = shift;
+  CFile($FN);
 
   my $Result;
   my $arch = Archive::Zip->new();
@@ -481,6 +484,7 @@ Function receives a path to the epub-file and returns all significant text from 
 
 sub ExtractTextFromEPUBFile {
   my $FN = shift;
+  CFile($FN);
 
   my $Result;
   my $arch = Archive::Zip->new();
@@ -600,6 +604,7 @@ sub OPCPartAbsoluteNameFromRelative {
 sub ExtractSingleZipFile {
   my $FN = shift;
   my $Ext = shift;
+  CFile($FN);
   my $Zip = Archive::Zip->new();
 
   return unless ( $Zip->read( $FN ) == Archive::Zip::AZ_OK );
@@ -627,6 +632,7 @@ $Format can be 'fb2.zip', 'fb2', 'doc.zip', 'doc', 'docx.zip',
 
 sub DetectBookFormat {
   my $File = shift;
+  CFile($File);
   my $Format = shift;
   if (defined $Format && $Format =~/^($rxFormats)$/) {
     $Format = $1;
@@ -788,6 +794,7 @@ B<CheckIfTXT()> - text-file
 
 sub CheckIfDocZip {
   my $FN = shift;
+  CFile($FN);
   my $Extract = ExtractSingleZipFile( $FN, 'doc' ) || return;
   my $Result = CheckIfDoc( $Extract->{'file'} );
   ForceRmDir($Extract->{'tmp'});
@@ -796,6 +803,7 @@ sub CheckIfDocZip {
 
 sub CheckIfEPubZip {
   my $FN = shift;
+  CFile($FN);
   my $Extract = ExtractSingleZipFile( $FN, 'epub' ) || return;
   my $Result = CheckIfEPub( $Extract->{'file'} );
   ForceRmDir($Extract->{'tmp'});
@@ -804,6 +812,7 @@ sub CheckIfEPubZip {
 
 sub CheckIfDocxZip {
   my $FN = shift;
+  CFile($FN);
   my $Extract = ExtractSingleZipFile( $FN, 'docx' ) || return;
   my $Result = CheckIfDocx( $Extract->{'file'} );
   ForceRmDir($Extract->{'tmp'});
@@ -812,6 +821,7 @@ sub CheckIfDocxZip {
 
 sub CheckIfFB2Zip {
   my $FN = shift;
+  CFile($FN);
   my $Extract = ExtractSingleZipFile( $FN, 'fb2' ) || return;
   my $Result = CheckIfFB2( $Extract->{'file'} );
   ForceRmDir($Extract->{'tmp'});
@@ -820,6 +830,7 @@ sub CheckIfFB2Zip {
 
 sub CheckIfTXTZip {
   my $FN = shift;
+  CFile($FN);
   my $Extract = ExtractSingleZipFile( $FN, 'txt' ) || return;
   my $Result = CheckIfTXT( $Extract->{'file'} );
   ForceRmDir($Extract->{'tmp'});
@@ -828,6 +839,7 @@ sub CheckIfTXTZip {
 
 sub CheckIfEPub {
   my $FN = shift;
+  CFile($FN);
 
   my $arch = Archive::Zip->new();
 
@@ -881,6 +893,7 @@ sub CheckIfEPub {
 
 sub CheckIfDocx {
   my $FN = shift;
+  CFile($FN);
 
   my $arch = Archive::Zip->new();
 
@@ -890,6 +903,7 @@ sub CheckIfDocx {
 
 sub CheckIfDoc {
   my $FilePath = shift;
+  CFile($FilePath);
 
   my $ofs = OLE::Storage_Lite->new($FilePath);
   my $name = Encode::encode("UCS-2LE", "WordDocument");
@@ -898,6 +912,7 @@ sub CheckIfDoc {
 
 sub CheckIfFB2 {
   my $FN = shift;
+  CFile($FN);
   my $parser = XML::LibXML->new(%LibXMLParserOptions);
   my $XML = eval{ $parser->parse_file($FN) };
   return if( $@ || !$XML );
@@ -906,6 +921,7 @@ sub CheckIfFB2 {
 
 sub CheckIfFB3 {
   my $FN = shift;
+  CFile($FN);
 
   my $Zip = Archive::Zip->new();
   my $XC = XML::LibXML::XPathContext->new;
@@ -926,6 +942,7 @@ sub CheckIfFB3 {
 
 sub CheckIfTXT {
   my $FN = shift;
+  CFile($FN);
   my $String = ExtractTextFromTXTFile($FN);
   return $String !~ /[\x00-\x08\x0B\x0C\x0E-\x1F]/g; #всякие непечатные Control characters говорят, что у нас тут бинарник
 }
@@ -956,6 +973,13 @@ sub ForceRmDir{
 		unlink "$DirToClean/$_" or warn "error '$!' deleting file '$DirToClean/$_'";
 	}
 	rmdir($DirToClean) or die("Error removing dir $DirToClean!\n$!");
+}
+
+sub CFile {
+  my $FilePath = shift;
+  open my $CF,"<".$FilePath or die "Cant't open file '".substr($FilePath,0,20).(length($FilePath)>20?'...':'')."' : $!";
+  close $CF;
+  return 1;
 }
 
 =head1 REQUIRED MODULES
